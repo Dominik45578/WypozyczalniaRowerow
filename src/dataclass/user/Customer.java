@@ -1,15 +1,34 @@
+// Abstract Customer Class
 package dataclass.user;
 
-abstract public class Customer {
-    String customerID;
-    String pesel;
-    String placeOfResident;
-    String postCode;
-    String city;
-    String name;
-    String SecondName;
-    String lastName;
-    int numberOfRented;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Abstract class representing a Customer.
+ */
+public abstract class Customer {
+
+    protected String customerId;
+    protected String pesel;
+    protected String address;
+    protected String postalCode;
+    protected String city;
+    protected String firstName;
+    protected String secondName;
+    protected String lastName;
+    protected int numberOfRentedItems;
+    protected Map<String, Object> rentedItems = new HashMap<>();
+
+    // Getters and Setters
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
+    }
 
     public String getPesel() {
         return pesel;
@@ -19,20 +38,20 @@ abstract public class Customer {
         this.pesel = pesel;
     }
 
-    public String getPlaceOfResident() {
-        return placeOfResident;
+    public String getAddress() {
+        return address;
     }
 
-    public void setPlaceOfResident(String placeOfResident) {
-        this.placeOfResident = placeOfResident;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
-    public String getPostCode() {
-        return postCode;
+    public String getPostalCode() {
+        return postalCode;
     }
 
-    public void setPostCode(String postCode) {
-        this.postCode = postCode;
+    public void setPostalCode(String postalCode) {
+        this.postalCode = postalCode;
     }
 
     public String getCity() {
@@ -43,28 +62,20 @@ abstract public class Customer {
         this.city = city;
     }
 
-    public String getCustomerID() {
-        return customerID;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setCustomerID(String customerID) {
-        this.customerID = customerID;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 
     public String getSecondName() {
-        return SecondName;
+        return secondName;
     }
 
     public void setSecondName(String secondName) {
-        SecondName = secondName;
+        this.secondName = secondName;
     }
 
     public String getLastName() {
@@ -73,5 +84,27 @@ abstract public class Customer {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public int getNumberOfRentedItems() {
+        return numberOfRentedItems;
+    }
+
+    public void setNumberOfRentedItems(int numberOfRentedItems) {
+        this.numberOfRentedItems = numberOfRentedItems;
+    }
+
+    public Map<String, Object> getRentedItems() {
+        return rentedItems;
+    }
+
+    public void addRentedItem(String itemId, Object itemDetails) {
+        rentedItems.put(itemId, itemDetails);
+        numberOfRentedItems++;
+    }
+
+    public void removeRentedItem(String itemId) {
+        rentedItems.remove(itemId);
+        numberOfRentedItems--;
     }
 }

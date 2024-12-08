@@ -1,25 +1,18 @@
+// PrivateCustomer Class
 package dataclass.user;
 
-import java.util.Map;
-
+/**
+ * Class representing a private customer.
+ */
 public class PrivateCustomer extends Customer implements User {
+
     @Override
-    public String getID() {
-        return customerID;
+    public String getId() {
+        return customerId;
     }
 
     @Override
-    public int getNumberOfRented() {
-        return numberOfRented;
-    }
-
-    @Override
-    public <K, V> Map<K, V> getRented() {
-        return Map.of();
-    }
-
-    @Override
-    public User getUserType() {
-        return null;
+    public String getUserType() {
+        return "PrivateCustomer";
     }
 }
