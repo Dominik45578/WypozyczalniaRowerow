@@ -5,9 +5,9 @@ import dataclass.user.User;
 import dataclass.vehicle.Vehicle;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Predicate;
 
 public class VehicleDataLoader implements DataLoader<Vehicle> {
     private String filePath;
@@ -40,12 +40,22 @@ public class VehicleDataLoader implements DataLoader<Vehicle> {
     }
 
     @Override
+    public <K, V> Map<K, V> loadToMap() {
+        return Map.of();
+    }
+
+    @Override
     public boolean isReadable() throws FileNotFoundException {
          if(file.canRead()){
             dataInput = new Scanner(file);
             return true;
         }
 
+        return false;
+    }
+
+    @Override
+    public boolean setPath(Path path) {
         return false;
     }
 
@@ -70,5 +80,70 @@ public class VehicleDataLoader implements DataLoader<Vehicle> {
     @Override
     public String getPath() {
         return  filePath;
+    }
+
+    @Override
+    public Map<Integer, Vehicle> importDataFromFile() throws IOException {
+        return Map.of();
+    }
+
+    @Override
+    public void exportDataToFile() throws IOException {
+
+    }
+
+    @Override
+    public void addItemToDatabase(Vehicle item) {
+
+    }
+
+    @Override
+    public void addItemToDatabase(int id, Vehicle item) {
+
+    }
+
+    @Override
+    public void removeItemFromDatabase(int id) {
+
+    }
+
+    @Override
+    public Vehicle getItemFromDatabase(int id) {
+        return null;
+    }
+
+    @Override
+    public void updateItemInDatabase(int id, Vehicle item) {
+
+    }
+
+    @Override
+    public void clearDatabase() {
+
+    }
+
+    @Override
+    public Map<Integer, Vehicle> getAll() {
+        return Map.of();
+    }
+
+    @Override
+    public LinkedHashMap<Integer, Vehicle> getSorted(Comparator<Vehicle> comparator) {
+        return null;
+    }
+
+    @Override
+    public Map<Integer, Vehicle> getFiltered(Predicate<Vehicle> filter) {
+        return Map.of();
+    }
+
+    @Override
+    public boolean checkDuplicate(int id) {
+        return false;
+    }
+
+    @Override
+    public void synchronize() throws IOException {
+
     }
 }

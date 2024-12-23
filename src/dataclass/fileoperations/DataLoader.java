@@ -12,6 +12,8 @@ import java.util.function.Predicate;
  */
 public interface DataLoader<T> {
 
+    <String,User> Map<String,User> LoadtoMap();
+
     /**
      * Loads data into a map structure.
      *
@@ -34,6 +36,8 @@ public interface DataLoader<T> {
      * @return true if the path is valid and set successfully.
      */
     boolean setPath(Path path);
+
+    boolean setPath(String path);
 
     /**
      * Gets the current file path.
