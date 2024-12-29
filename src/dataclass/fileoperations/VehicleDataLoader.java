@@ -8,7 +8,7 @@ import java.io.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
-
+@Deprecated
 public class VehicleDataLoader implements DataLoader<Vehicle> {
     private String filePath;
     private File file;

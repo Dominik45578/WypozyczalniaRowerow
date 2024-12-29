@@ -10,6 +10,7 @@ import java.util.function.Predicate;
  * Interface for managing data operations with generic database structures.
  * Provides methods for data import, export, and manipulation.
  */
+@Deprecated
 public interface DataLoader<T> {
 
     <String,User> Map<String,User> LoadtoMap();

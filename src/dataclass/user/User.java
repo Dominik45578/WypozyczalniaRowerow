@@ -1,5 +1,7 @@
 package dataclass.user;
 
+import layout.Users;
+
 import java.util.Map;
 
 /**
@@ -33,5 +35,5 @@ public interface User {
      *
      * @return the user type.
      */
-    String getUserType();
+    Users getUserType();
 }

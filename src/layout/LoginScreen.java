@@ -6,7 +6,7 @@ import java.awt.*;
 public class LoginScreen extends ScreenUtil {
 
     public LoginScreen() {
-        super("Guckor Bike Rental - Login", 1000, 500);
+        super("Guckor Bike Rental - Login", 1000, 600);
     }
 
     @Override
@@ -15,14 +15,20 @@ public class LoginScreen extends ScreenUtil {
         centralPanel.setLayout(new GridLayout(1, 2, 20, 0)); // 2 kolumny: lewa i prawa
 
         // Lewy panel - obraz
-        JPanel leftPanel = createRoundedPanel(new Color(68, 68, 68));
-        leftPanel.setLayout(new BorderLayout());
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout(10,10));
         leftPanel.setOpaque(false);
-        leftPanel.add(new JLabel(new ImageIcon("C:/Users/Domin/IdeaProjects/laby4/src/rentallogo1.png")), BorderLayout.CENTER);
+        JPanel iconPanel = createRoundedPanel(new Color(68, 68, 68));
+        iconPanel.add(new JLabel(new ImageIcon("C:/Users/Domin/IdeaProjects/laby4/src/rentallogo1.png")), BorderLayout.CENTER);
+        JPanel registerPanel = createRoundedPanel(new Color(68, 68, 68));
+        registerPanel.add(createRoundedButton("Zarejestruj się", new Color(244, 86, 86), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20)));
 
+        registerPanel.setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+        leftPanel.add(iconPanel, BorderLayout.CENTER);
+        leftPanel.add(registerPanel, BorderLayout.SOUTH);
         // Prawy panel - formularz logowania
         JPanel rightPanel = createRoundedPanel(new Color(68, 68, 68));
-        rightPanel.setLayout(new GridLayout(4, 1, 40, 10));
+        rightPanel.setLayout(new GridLayout(5, 1, 40, 10));
         rightPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
         rightPanel.setOpaque(false);
 

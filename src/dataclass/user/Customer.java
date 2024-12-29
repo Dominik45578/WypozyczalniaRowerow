@@ -2,13 +2,14 @@
 package dataclass.user;
 
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Abstract class representing a Customer.
  */
-public abstract class Customer {
+public abstract class Customer implements Serializable {
 
     protected String customerId;
     protected String pesel;
@@ -20,6 +21,20 @@ public abstract class Customer {
     protected String lastName;
     protected int numberOfRentedItems;
     protected Map<String, Object> rentedItems = new HashMap<>();
+
+    public Customer(String customerId, String firstName, String secondName,
+                    String lastName, String pesel,String postalCode, String city,
+                    String address) {
+        this.secondName = secondName;
+        this.customerId = customerId;
+        this.pesel = pesel;
+        this.address = address;
+        this.postalCode = postalCode;
+        this.city = city;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        numberOfRentedItems = 0;
+    }
 
     // Getters and Setters
     public String getCustomerId() {

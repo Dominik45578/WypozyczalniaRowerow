@@ -12,7 +12,7 @@ public class RentalInventory {
     private final Map<String, Vehicle> inventory = new HashMap<>();
 
     /**
-     * Dodaje pojaz do inwentarza
+     * Dodaje pojazd do inwentarza
      *
      * @param vehicle pojazd do dodania
      */

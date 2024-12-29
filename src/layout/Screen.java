@@ -84,23 +84,28 @@ public interface Screen {
         return textField;
     }
 
-    default JCheckBox createCheckBox(String text, Color background, Font font) {
+    default JCheckBox createCheckBox(String text, Color background, Color Foreground,Font font) {
         JCheckBox checkBox = new JCheckBox(text);
         checkBox.setBackground(background);
         checkBox.setFont(font);
+        checkBox.setForeground(Foreground);
         return checkBox;
     }
 
     default JPanel createFormWrapper(String title) {
-        JPanel formWrapper = createRoundedPanel(new Color(178, 178, 178));//new Color(218, 237, 248));
-        formWrapper.setLayout(new BorderLayout(10,10));
+        JPanel formWrapper = createRoundedPanel(new Color(85, 84, 84));//new Color(218, 237, 248));
+        formWrapper.setLayout(new BorderLayout(10,20));
         formWrapper.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         formWrapper.setOpaque(false);
         JLabel formTitle = new JLabel(title + " : ");
-        formTitle.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        formTitle.setFont(new Font("SansSerif", Font.BOLD, 16));
+        formTitle.setForeground(Color.WHITE);
         JTextField formTextField = new JTextField();
-        formTextField.setFont(new Font("SansSerif", Font.PLAIN, 16));
-        formTextField.setBackground(new Color(141, 140, 140));
+        formTextField.setFont(new Font("SansSerif", Font.PLAIN, 20));
+        formTextField.setBackground(new Color(97, 97, 97));
+        formTextField.setMargin(new Insets(0,20,0,20));
+        formTextField.setBorder(null);
+        formTextField.setCaretColor(Color.WHITE);
         formTextField.setForeground(Color.WHITE);
         formWrapper.add(formTitle, BorderLayout.NORTH);
         formWrapper.add(formTextField, BorderLayout.CENTER);

@@ -9,7 +9,7 @@ public class MainScreen extends ScreenUtil {
     protected JPanel notificationsPanel;
 
     MainScreen() {
-        super("Guckor Bike Rental - Login", 1400, 800);
+        super("Guckor Bike Rental - Login", 1600, 900);
     }
 
     @Override
@@ -25,9 +25,9 @@ public class MainScreen extends ScreenUtil {
     }
 
     private JPanel createUpperPanel() {
-        JPanel upperPanel = createRoundedPanel(new Color(68, 68, 68));
-        upperPanel.setLayout(new BorderLayout(20,10));
-        upperPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel upperPanel = createRoundedPanel(new Color(68, 68, 68,0));
+        upperPanel.setLayout(new BorderLayout(10,10));
+        //upperPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // Logo
         JLabel logoLabel = new JLabel(new ImageIcon("C:/Users/Domin/IdeaProjects/Rowerowo/src/rentallogo150.png"));
@@ -77,8 +77,9 @@ public class MainScreen extends ScreenUtil {
     }
 
     private JPanel createLeftPanel() {
-        JPanel leftPanel = createRoundedPanel(new Color(68, 68, 68));
-        leftPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel leftPanel = createRoundedPanel(new Color(68, 68, 68,0));
+
+        //leftPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         leftPanel.setLayout(new GridLayout(7, 1, 20, 10));
         leftPanel.setPreferredSize(new Dimension(centralPanelDimension.width / 4, 100));
 
@@ -86,7 +87,7 @@ public class MainScreen extends ScreenUtil {
         leftPanel.add(new MenuOption("Wyszukiwarka", new ImageIcon("C:/Users/Domin/IdeaProjects/Rowerowo/src/searchicon.jpg")).getPanel());
         leftPanel.add(new MenuOption("Strona Główna", new ImageIcon("C:/Users/Domin/IdeaProjects/Rowerowo/src/homepage.jpg")).getPanel());
         leftPanel.add(new MenuOption("Statystyki", new ImageIcon("C:/Users/Domin/IdeaProjects/Rowerowo/src/staticon.jpg")).getPanel());
-
+        leftPanel.setOpaque(false);
         return leftPanel;
     }
 

@@ -1,5 +1,7 @@
 package dataclass.user;
 
+import layout.Users;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,7 +17,8 @@ public class BusinessCustomer extends Customer implements User {
     private String companyCity;
     private Map<String, Employee> employees = new HashMap<>();
 
-    public BusinessCustomer(String companyName, String companyId) {
+    public BusinessCustomer(String customerId, String firstName, String secondName, String lastName, String pesel, String postalCode, String city, String address) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address);
         this.companyName = companyName;
         this.companyId = companyId;
     }
@@ -79,7 +82,7 @@ public class BusinessCustomer extends Customer implements User {
     }
 
     @Override
-    public String getUserType() {
-        return "BusinessCustomer";
+    public Users getUserType() {
+        return Users.BUSINESS_CUSTOMER;
     }
 }

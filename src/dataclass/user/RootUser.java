@@ -5,6 +5,7 @@ import dataclass.user.User;
 import dataclass.vehicle.Vehicle;
 import dataclass.vehicle.ScooterBrand;
 import dataclass.vehicle.ScooterModel;
+import layout.Users;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +39,8 @@ public class RootUser implements User {
     }
 
     @Override
-    public String getUserType() {
-        return "Root";
+    public Users getUserType() {
+        return Users.ROOT;
     }
 
     /**
