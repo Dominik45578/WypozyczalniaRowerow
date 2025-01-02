@@ -31,12 +31,12 @@ public class RegisterScreen extends ScreenUtil {
 
 
         // Lewy panel z logiem
-        JPanel leftPanel = new JPanel(new BorderLayout(10,10));
+        JPanel leftPanel = new JPanel(new BorderLayout(10, 10));
         leftPanel.setOpaque(false);
         JPanel leftCentralPanel = createRoundedPanel(new Color(68, 68, 68));
-        leftCentralPanel.setLayout(new BorderLayout(10,10));
+        leftCentralPanel.setLayout(new BorderLayout(10, 10));
         leftCentralPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
-        leftCentralPanel.add(new JLabel(new ImageIcon("C:/Users/Domin/IdeaProjects/laby4/src/rentallogo1.png")),
+        leftCentralPanel.add(new JLabel(new ImageIcon("src/rentallogo1.png")),
                 BorderLayout.CENTER);
 
         JButton loginButton = createButton("Zaloguj się", new Color(0, 173, 181), Color.WHITE, new Font("SansSerif", Font.BOLD, 24));
@@ -48,7 +48,7 @@ public class RegisterScreen extends ScreenUtil {
         //leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.add(leftCentralPanel, BorderLayout.CENTER);
         //leftPanel.add(Box.createVerticalStrut(20));
-        leftPanel.add(loginButtonPanel,BorderLayout.SOUTH);
+        leftPanel.add(loginButtonPanel, BorderLayout.SOUTH);
 
         // Prawy panel z formularzem
         JPanel rightPanel = createRoundedPanel(new Color(68, 68, 68));
@@ -66,21 +66,31 @@ public class RegisterScreen extends ScreenUtil {
         rightPanel.add(createFormWrapper("Email"));
         rightPanel.add(createFormWrapper("Hasło"));
 
-        JCheckBox termsCheckBox = createCheckBox("Akceptuję regulamin",new Color(68, 68, 68) ,Color.WHITE, new Font("SansSerif", Font.PLAIN, 16));
+        JCheckBox termsCheckBox = createCheckBox("Akceptuję regulamin", new Color(68, 68, 68), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20));
         JButton registerButton = createRoundedButton("Zarejestruj się", new Color(244, 86, 86), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20));
         termsCheckBox.setHorizontalAlignment(SwingConstants.CENTER);
+        termsCheckBox.setFocusPainted(false);
         rightPanel.add(termsCheckBox);
         rightPanel.add(registerButton);
 
         // Dodanie paneli do formPanel
         formPanel.add(leftPanel);
         formPanel.add(rightPanel);
+        JLayeredPane lp = new JLayeredPane();
+        lp.setOpaque(false);
+
+
 
         // Dodanie paneli do centralPanel
         centralPanel.add(upperContentPanel, BorderLayout.NORTH);
         centralPanel.add(formPanel, BorderLayout.CENTER);
-    }
 
+
+        //JPanel panel = createRoundedPanel(Color.YELLOW);
+        //panel.setBounds(10, 10, 200, 200);
+        //lp.add(panel);
+        //frame.add(lp);
+    }
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             RegisterScreen registerScreen = new RegisterScreen();

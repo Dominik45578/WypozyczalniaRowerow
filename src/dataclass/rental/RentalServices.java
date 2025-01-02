@@ -8,11 +8,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 public class RentalServices implements RentalService {
+
+    private static RentalServices instance;
 
     private final Map<String, Vehicle> inventory = new HashMap<>();
     private final Map<String, Vehicle> rentedVehicles = new HashMap<>();
+
+    private RentalServices() {
+        // Prywatny konstruktor zapobiega tworzeniu instancji spoza klasy
+    }
+
+    public static synchronized RentalServices getInstance() {
+        if (instance == null) {
+            instance = new RentalServices();
+        }
+        return instance;
+    }
 
     @Override
     public void addVehicle(Vehicle vehicle) {
@@ -34,9 +46,7 @@ public class RentalServices implements RentalService {
         if (vehicle != null && !vehicle.isRented()) {
             inventory.remove(vehicleId);
             rentedVehicles.put(vehicleId, vehicle);
-            if (vehicle instanceof dataclass.vehicle.SingleTrackVehicle) {
-                ((dataclass.vehicle.SingleTrackVehicle) vehicle).rentVehicle(user);
-            }
+            vehicle.rentVehicle(user);
             return true;
         }
         return false;
@@ -48,9 +58,9 @@ public class RentalServices implements RentalService {
         if (vehicle != null) {
             rentedVehicles.remove(vehicleId);
             inventory.put(vehicleId, vehicle);
-            if (vehicle instanceof dataclass.vehicle.SingleTrackVehicle) {
-                ((dataclass.vehicle.SingleTrackVehicle) vehicle).returnVehicle();
-            }
+            User user = vehicle.getRenter();
+            user.returnItem(vehicleId);
+            vehicle.returnVehicle(); // Zakładamy, że Vehicle ma metodę setRented
             return true;
         }
         return false;

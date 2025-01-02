@@ -1,3 +1,4 @@
+
 package dataclass.user;
 
 import layout.Users;
@@ -29,6 +30,28 @@ public interface User {
      * @return a map containing rented items.
      */
     Map<String, Object> getRentedItems();
+
+    /**
+     * Adds a rented item to the user's list by ID.
+     *
+     * @param itemId the ID of the item to rent.
+     * @param itemDetails the details of the item to rent.
+     */
+    void rentItem(String itemId, Object itemDetails);
+
+    /**
+     * Removes a rented item from the user's list by ID.
+     *
+     * @param itemId the ID of the item to return.
+     */
+    void returnItem(String itemId);
+
+    /**
+     * Removes a rented item by its ID.
+     *
+     * @param itemId the ID of the item to remove.
+     */
+    void removeRentedItem(String itemId);
 
     /**
      * Gets the type of the user.

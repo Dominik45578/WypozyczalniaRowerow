@@ -26,19 +26,40 @@ public interface Vehicle {
      *
      * @return the vehicle ID.
      */
+
+    void rentVehicle(User user);
+    void returnVehicle();
     String getVehicleId();
+
 
     /**
      * Gets the name of the vehicle.
      *
      * @return the vehicle name.
      */
-    String getVehicleName();
+    String getVehicleType();
 
     /**
      * Gets the model of the vehicle.
      *
      * @return the vehicle model.
      */
+
+    /**
+     *
+     * @return
+     */
     String getVehicleModel();
+    default boolean isElectric(){
+        return false;
+    }
+
+    /**
+     * Gets the battery level of vehicle.If battery do not exist return -1
+     *
+     * @return the vehicle battery level (0,100) or -1 if battery do not exist
+     */
+    default int getBatteryLevel(){
+        return -1;
+    }
 }

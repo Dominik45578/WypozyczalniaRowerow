@@ -1,24 +1,14 @@
 package dataclass.vehicle;
 
-public class ScooterModel {
-    private final ScooterBrand brand;
-    private final String name;
+import java.io.Serial;
+import java.io.Serializable;
 
-    public ScooterModel(ScooterBrand brand, String name) {
-        this.brand = brand;
-        this.name = name;
-    }
-
-    public ScooterBrand getBrand() {
-        return brand;
-    }
-
-    public String getName() {
-        return name;
-    }
+public record ScooterModel(ScooterBrand brand, String name) implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L; // Opcjonalne, ale zalecane
 
     @Override
     public String toString() {
-        return "Model: " + name + " (Brand: " + brand.getName() + ")";
+        return "Marka : "+brand+", Model :"+name;
     }
 }

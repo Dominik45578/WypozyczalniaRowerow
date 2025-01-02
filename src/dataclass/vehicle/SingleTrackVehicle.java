@@ -10,17 +10,20 @@ import dataclass.user.User;
 public class SingleTrackVehicle implements Vehicle {
 
     private boolean rented;
-    private String vehicleName;
+    private String vehicleType;
     private String vehicleModel;
     private String vehicleId;
     private User renter;
 
     // Constructor
+    public SingleTrackVehicle(){
+        this("D001","Rower","Glowrer");
+    }
     public SingleTrackVehicle(String vehicleId, String vehicleName, String vehicleModel) {
         this.vehicleId = vehicleId;
-        this.vehicleName = vehicleName;
+        this.vehicleType = vehicleName;
         this.vehicleModel = vehicleModel;
-        this.rented = false;
+        this.rented = true;
         this.renter = null;
     }
 
@@ -40,8 +43,8 @@ public class SingleTrackVehicle implements Vehicle {
     }
 
     @Override
-    public String getVehicleName() {
-        return vehicleName;
+    public String getVehicleType() {
+        return vehicleType;
     }
 
     @Override
@@ -50,6 +53,7 @@ public class SingleTrackVehicle implements Vehicle {
     }
 
     // Set renter and update rented status
+    @Override
     public void rentVehicle(User user) {
         this.renter = user;
         this.rented = true;

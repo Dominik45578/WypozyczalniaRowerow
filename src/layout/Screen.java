@@ -43,9 +43,14 @@ public interface Screen {
         protected void paintComponent(Graphics g) {
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            // Narysowanie zaokrąglonego tła
             g2d.setColor(background);
-            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30); // Zaokrąglenie rogów
-            super.paintComponent(g2d);
+            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30); // Zaokrąglone rogi
+
+            // Wywołanie domyślnego renderowania treści (tekst, ikony)
+            super.paintComponent(g);
+
             g2d.dispose();
         }
 
@@ -57,11 +62,12 @@ public interface Screen {
 
     button.setForeground(foreground);
     button.setFont(font);
-    button.setFocusPainted(false);
-    button.setOpaque(false);
-    button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Opcjonalne odstępy wewnętrzne
+    button.setFocusPainted(false); // Usuń obramowanie focusa
+    button.setOpaque(false); // Wyłącz domyślne wypełnienie
+    button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Ustawienia marginesów wewnętrznych
     return button;
 }
+
  default JButton createButton(String text, Color background, Color foreground, Font font) {
         JButton button = new JButton(text);
         button.setBackground(background);
@@ -75,6 +81,10 @@ public interface Screen {
         JLabel label = new JLabel(text);
         label.setFont(font);
         label.setForeground(color);
+        return label;
+    }
+    default JLabel createLabel(String text , int size) {
+        JLabel label =createLabel(text, new Font("SansSerif", Font.PLAIN, size), Color.WHITE);
         return label;
     }
 

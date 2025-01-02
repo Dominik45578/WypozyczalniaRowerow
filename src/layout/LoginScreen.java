@@ -19,7 +19,7 @@ public class LoginScreen extends ScreenUtil {
         leftPanel.setLayout(new BorderLayout(10,10));
         leftPanel.setOpaque(false);
         JPanel iconPanel = createRoundedPanel(new Color(68, 68, 68));
-        iconPanel.add(new JLabel(new ImageIcon("C:/Users/Domin/IdeaProjects/laby4/src/rentallogo1.png")), BorderLayout.CENTER);
+        iconPanel.add(new JLabel(new ImageIcon("src/rentallogo1.png")), BorderLayout.CENTER);
         JPanel registerPanel = createRoundedPanel(new Color(68, 68, 68));
         registerPanel.add(createRoundedButton("Zarejestruj się", new Color(244, 86, 86), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20)));
 

@@ -23,7 +23,7 @@ public abstract class ScreenUtil implements Screen {
             frame = new JFrame(title);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            frame.setIconImage(new ImageIcon("C:/Users/Domin/IdeaProjects/laby4/src/rentallogo1.png").getImage());
+            frame.setIconImage(new ImageIcon("src/rentallogo1.png").getImage());
             frame.setUndecorated(true);
             this.centralPanelDimension = new Dimension(width, height);
         }

@@ -39,6 +39,21 @@ public class RootUser implements User {
     }
 
     @Override
+    public void rentItem(String itemId, Object itemDetails) {
+
+    }
+
+    @Override
+    public void returnItem(String itemId) {
+
+    }
+
+    @Override
+    public void removeRentedItem(String itemId) {
+
+    }
+
+    @Override
     public Users getUserType() {
         return Users.ROOT;
     }
