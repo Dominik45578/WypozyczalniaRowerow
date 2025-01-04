@@ -1,6 +1,6 @@
 package dataclass.user;
 
-import layout.Users;
+import dataclass.user.Users;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -81,7 +81,7 @@ public class BusinessCustomer extends Customer implements User {
         return companyId;
     }
 
-    @Override
+  @Override
     public Users getUserType() {
         return Users.BUSINESS_CUSTOMER;
     }

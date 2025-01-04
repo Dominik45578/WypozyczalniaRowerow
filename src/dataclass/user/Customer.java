@@ -1,7 +1,6 @@
 package dataclass.user;
 
 import dataclass.rental.RentalTransaction;
-import layout.Users;
 
 import java.io.Serializable;
 import java.util.HashMap;

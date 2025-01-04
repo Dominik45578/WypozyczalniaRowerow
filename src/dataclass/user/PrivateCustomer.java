@@ -1,8 +1,6 @@
 // PrivateCustomer Class
 package dataclass.user;
 
-import layout.Users;
-
 /**
  * Class representing a private customer.
  */

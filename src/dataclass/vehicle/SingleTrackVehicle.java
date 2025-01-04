@@ -10,10 +10,11 @@ import dataclass.user.User;
 public class SingleTrackVehicle implements Vehicle {
 
     private boolean rented;
+    private User renter;
     private String vehicleType;
     private String vehicleModel;
     private String vehicleId;
-    private User renter;
+
 
     // Constructor
     public SingleTrackVehicle(){
@@ -64,4 +65,5 @@ public class SingleTrackVehicle implements Vehicle {
         this.renter = null;
         this.rented = false;
     }
+
 }

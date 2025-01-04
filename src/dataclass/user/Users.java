@@ -1,4 +1,4 @@
-package layout;
+package dataclass.user;
 
 public enum Users {
     ROOT(10),

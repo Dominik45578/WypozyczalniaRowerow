@@ -6,30 +6,30 @@ import dataclass.user.User;
 import java.util.*;
 
 public class RentalSystemManager {
-    private final Map<String, ScooterBrand> brands = new HashMap<>();
-    private final Map<ScooterBrand, Map<String, ScooterModel>> models = new HashMap<>();
+    private final Map<String, VehicleBrand> brands = new HashMap<>();
+    private final Map<VehicleBrand, Map<String, VehicleModel>> models = new HashMap<>();
     private final List<Vehicle> vehicles = new ArrayList<>();
     private final List<User> users = new ArrayList<>();
 
     public void addBrand(String brandName) {
-        ScooterBrand brand = new ScooterBrand(brandName);
+        VehicleBrand brand = new VehicleBrand(brandName);
         brands.put(brandName, brand);
         models.put(brand, new HashMap<>());
     }
 
-    public void addModel(ScooterBrand brand, String modelName) {
+    public void addModel(VehicleBrand brand, String modelName) {
         if (!models.containsKey(brand)) {
             throw new IllegalArgumentException("Brand does not exist");
         }
-        ScooterModel model = new ScooterModel(brand, modelName);
+        VehicleModel model = new VehicleModel(modelName);
         models.get(brand).put(modelName, model);
     }
 
-    public Map<String, ScooterBrand> getAllBrands() {
+    public Map<String, VehicleBrand> getAllBrands() {
         return Collections.unmodifiableMap(brands);
     }
 
-    public Map<ScooterBrand, Map<String, ScooterModel>> getAllModels() {
+    public Map<VehicleBrand, Map<String, VehicleModel>> getAllModels() {
         return Collections.unmodifiableMap(models);
     }
 
