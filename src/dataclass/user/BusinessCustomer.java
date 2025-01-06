@@ -17,8 +17,9 @@ public class BusinessCustomer extends Customer implements User {
     private String companyCity;
     private Map<String, Employee> employees = new HashMap<>();
 
-    public BusinessCustomer(String customerId, String firstName, String secondName, String lastName, String pesel, String postalCode, String city, String address) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address);
+    public BusinessCustomer(String customerId, String firstName, String secondName, String lastName,
+                            String pesel, String postalCode, String city, String address,String email) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email);
         this.companyName = companyName;
         this.companyId = companyId;
     }

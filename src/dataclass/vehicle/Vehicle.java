@@ -7,12 +7,15 @@ import dataclass.user.User;
  */
 public interface Vehicle {
 
+
     /**
      * Checks if the vehicle is currently rented.
      *
      * @return true if the vehicle is rented, false otherwise.
      */
-    boolean isRented();
+    String getStatus();
+    void setStatus(String status);
+     boolean isRented();
 
     /**
      * Gets the user who has rented the vehicle.
@@ -62,4 +65,5 @@ public interface Vehicle {
     default int getBatteryLevel(){
         return -1;
     }
+
 }

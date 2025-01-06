@@ -1,5 +1,10 @@
 package layout;
 
+import dataclass.fileoperations.CentralDatabase;
+import dataclass.user.Customer;
+import dataclass.user.PrivateCustomer;
+import dataclass.user.User;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
@@ -14,10 +19,36 @@ public class MainScreen extends ScreenUtil {
     protected JPanel upperContentPanel;
     protected JPanel formPanel;
     protected JPanel leftPanel;
+    protected JPanel toogle;
     protected JLayeredPane layers;
+    protected int lastElement;
+    protected Customer customer;
+    protected enum MenuOptionPosition {
+    HOMEPAGE(0),
+        SEARCH(1),
+    HISTORY(2),
+            STATS(3),
+        SETTINGS(4);
+
+    private final int index;
+
+    MenuOptionPosition(int index) {
+        this.index = index;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+}
+
+
 
     MainScreen() {
         super("Guckor Bike Rental - Login", 1700, 900);
+        lastElement = -1;
+          CentralDatabase.getInstance().setUser(new PrivateCustomer("001","Dominik"," ","Koralik","0429265555",
+               "31-866","Kraków","Skarżyńskiego 9","dkkd3046@gmail.com"));
+         customer = (Customer) CentralDatabase.getInstance().getUser();
     }
 
     @Override
@@ -106,23 +137,24 @@ public class MainScreen extends ScreenUtil {
         addMenuListener(statsOption, this::createStatsPanel);
         addMenuListener(historyOption, this::createHistoryPanel);
 
-        leftPanel.add(settingsOption.getPanel());
-        leftPanel.add(searchOption.getPanel());
-        leftPanel.add(homeOption.getPanel());
-        leftPanel.add(statsOption.getPanel());
-        leftPanel.add(historyOption.getPanel());
+
+        leftPanel.add(homeOption);
+        leftPanel.add(searchOption);
+        leftPanel.add(historyOption);
+        leftPanel.add(statsOption);
+        leftPanel.add(settingsOption);
 
         leftPanel.setOpaque(false);
     }
 
-    private void addMenuListener(MenuOption option, Runnable action) {
-        option.getPanel().addMouseListener(new MouseAdapter() {
+    private void addMenuListener(JPanel option, Runnable action) {
+        option.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 action.run();
             }
         });
-        option.getPanel().setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
+        option.setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
     }
 
 //    private void updateLayerContent(JPanel newContent) {
@@ -184,7 +216,126 @@ public class MainScreen extends ScreenUtil {
 }
 
    public void createHomePage() {
-    // Centralny panel treści
+        JPanel statsPanel =  createRoundedPanel(Colors.BACKGROUND.getColor());
+        changeLastElement(MenuOptionPosition.STATS.getIndex());
+        statsPanel.setPreferredSize(layers.getPreferredSize());
+        updateLayerContent(statsPanel);
+}
+
+    public void createHistoryPanel() {
+        JPanel historyPanel = new JPanel();
+        changeLastElement(MenuOptionPosition.HISTORY.getIndex());
+
+        historyPanel.setPreferredSize(layers.getPreferredSize());
+        updateLayerContent(historyPanel);
+    }
+
+
+public void createSettingsPanel() {
+    // Create the main settings panel
+    JPanel settingsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+    changeLastElement(MenuOptionPosition.SETTINGS.getIndex());
+    settingsPanel.setPreferredSize(layers.getPreferredSize());
+    settingsPanel.setBorder(BorderFactory.createEmptyBorder(15,15,15,15));
+    settingsPanel.setLayout(new GridLayout(6, 2, 10, 10));
+
+    // Get the current customer;
+
+    // Create EditableFields for customer information
+    EditableField firstNameField = new EditableField("First Name", customer.getFirstName());
+    EditableField lastNameField = new EditableField("Last Name", customer.getLastName());
+    EditableField addressField = new EditableField("Address", customer.getAddress());
+    EditableField emailField = new EditableField("Email", customer.getEmail());
+    EditableField cityField = new EditableField("City", customer.getCity());
+    EditableField postalCodeField = new EditableField("Postal Code", customer.getPostalCode());
+    EditableField rentedItemsField = new EditableField("Rented Items", String.valueOf(customer.getNumberOfRentedItems()));
+
+    firstNameField.getButton().addMouseListener(new MouseAdapter() {
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        // Tworzenie głównego panelu toggle
+        toogle = null;
+        toogle = createRoundedPanel(new Color(0, 0, 0, 0));
+        toogle.setBounds(0, 0, layers.getPreferredSize().width, layers.getPreferredSize().height);
+        toogle.setPreferredSize(layers.getPreferredSize());
+
+        // Tworzenie panelu EditableTogglePanel
+        EditableTogglePanel element = new EditableTogglePanel(
+            "Zmień email",
+            "E-mail",
+            customer.getEmail()
+        );
+        element.setPreferredSize(layers.getPreferredSize());
+
+        // Obsługa przycisku zamknięcia
+        element.getCloseLabel().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // Usuwanie panelu z warstwy
+                toogle.remove(element);
+                layers.remove(toogle);
+                layers.revalidate();
+                layers.repaint();
+            }
+        });
+
+        // Dodanie panelu elementu do panelu toggle
+        toogle.add(element);
+        layers.add(toogle, JLayeredPane.PALETTE_LAYER);
+        layers.revalidate();
+        layers.repaint();
+
+        // Dodanie obsługi akcji dla przycisku "Zapisz zmiany"
+        element.addMenuListener(() -> {
+            String news = element.getEnteredText(); // Pobieranie nowego e-maila
+            JPanel error = element.getContentPanel(); // Panel błędów
+            boolean haveError = false;
+
+            // Walidacja e-maila
+            if (!news.contains("@")) {
+                error.add(createLabel("E-mail nie zawiera znaku @", 20));
+                haveError = true;
+            }
+            if (!news.contains(".")) {
+                error.add(createLabel("E-mail nie zawiera znaku .", 20));
+                haveError = true;
+            }
+            if (news.length() < 8) {
+                error.add(createLabel("E-mail musi mieć przynajmniej 8 znaków", 20));
+                haveError = true;
+            }
+
+            // Jeśli brak błędów, zaktualizuj e-mail i odśwież ustawienia
+            if (!haveError) {
+                customer.setEmail(news);
+                toogle.remove(element);
+                layers.remove(toogle);
+                createSettingsPanel();
+            }
+
+            // Odśwież panel błędów
+            error.revalidate();
+            error.repaint();
+        });
+    }
+});
+
+
+    // Add EditableFields to the settings panel
+    settingsPanel.add(firstNameField);
+    settingsPanel.add(lastNameField);
+    settingsPanel.add(addressField);
+    settingsPanel.add(emailField);
+    settingsPanel.add(cityField);
+    settingsPanel.add(postalCodeField);
+    settingsPanel.add(rentedItemsField);
+
+    // Update the layer content with the settings panel
+    updateLayerContent(settingsPanel);
+}
+
+    public void createSearchPanel() {
+      // Centralny panel treści
     mainContentPanel.removeAll();
 
     // Panel z GridLayout do przechowywania ContentPanel
@@ -248,65 +399,11 @@ public class MainScreen extends ScreenUtil {
 
     // Aktualizacja zawartości warstwy
     updateLayerContent(mainContentPanel);
-}
-
-    public void createHistoryPanel() {
-        JPanel historyPanel = new JPanel();
-
-        historyPanel.setPreferredSize(layers.getPreferredSize());
-        updateLayerContent(historyPanel);
-    }
-
-    public void createSettingsPanel() {
-    // Tworzenie panelu z ustawieniami
-    JPanel settingsPanel = mainContentPanel;
-    settingsPanel.setPreferredSize(layers.getPreferredSize());
-
-    // Dodanie tła z półprzezroczystością
-    JPanel backgroundPanel = createRoundedPanel(null);
-    backgroundPanel.setBackground(new Color(0, 0, 0, 150)); // Czarne tło z przezroczystością
-    backgroundPanel.setBounds(0, 0, layers.getWidth(), layers.getHeight());
-
-    // Tworzymy GridBagLayout z 2 kolumnami
-    GridBagLayout gridBagLayout = new GridBagLayout();
-    GridBagConstraints gbc = new GridBagConstraints();
-
-    // Ustawienie rozkładu kolumn w GridBagLayout
-    gridBagLayout.columnWidths = new int[] {0, layers.getPreferredSize().width / 2 + 100}; // Pierwsza kolumna ma szerokość 0, druga kolumna z ustawieniami
-    gridBagLayout.rowHeights = new int[] {layers.getHeight()};
-    backgroundPanel.setLayout(gridBagLayout);
-
-    // Tworzenie okienka ustawień
-    JPanel settingsWindow = createRoundedPanel(Colors.DARK_BLUE.getColor());
-    settingsWindow.setPreferredSize(new Dimension(layers.getPreferredSize().width / 2 + 100, layers.getPreferredSize().height - 60)); // Wymiary okienka ustawień
-    settingsWindow.setLayout(new BorderLayout());
-
-    // Możesz dodać komponenty do okienka ustawień, np. etykiety, pola tekstowe itp.
-    JLabel label = createLabel("Ustawienia", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
-    settingsWindow.add(label, BorderLayout.CENTER);
-
-    // Dodanie okienka ustawień do tła w prawej kolumnie
-    gbc.gridx = 1;  // Ustawienie w drugiej kolumnie
-    gbc.gridy = 0;  // Pierwszy wiersz
-    gbc.anchor = GridBagConstraints.EAST;  // Wyrównanie do prawej strony
-    gbc.insets = new Insets(0, 0, 0, 10);  // Odstęp od prawej krawędzi
-
-    backgroundPanel.add(settingsWindow, gbc);
-
-    // Dodanie tła z okienkiem do warstwy
-    layers.add(backgroundPanel, JLayeredPane.PALETTE_LAYER);
-    layers.revalidate();
-    layers.repaint();
-}
-
-    public void createSearchPanel() {
-        JPanel searchPanel =  createRoundedPanel(Colors.BACKGROUND.getColor());
-        searchPanel.setPreferredSize(layers.getPreferredSize());
-        updateLayerContent(searchPanel);
     }
 
     public void createStatsPanel() {
         JPanel statsPanel =  createRoundedPanel(Colors.BACKGROUND.getColor());
+        changeLastElement(MenuOptionPosition.STATS.getIndex());
         statsPanel.setPreferredSize(layers.getPreferredSize());
         updateLayerContent(statsPanel);
     }
@@ -317,4 +414,21 @@ public class MainScreen extends ScreenUtil {
             mainScreen.showScreen();
         });
     }
+     public void changeLastElement(int newElement) {
+        if (lastElement == -1 || lastElement == newElement) {
+            return;
+        }
+        // Dezaktywuj poprzedni element
+        MenuOption oldOption = (MenuOption) leftPanel.getComponent(lastElement);
+        oldOption.setIsActive(false);
+        oldOption.setBackground(Colors.DARK_BLUE.getColor());
+
+        // Aktywuj nowy element
+        MenuOption newOption = (MenuOption) leftPanel.getComponent(newElement);
+        newOption.setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
+        newOption.setIsActive(true);
+
+        lastElement = newElement;
+    }
+
 }

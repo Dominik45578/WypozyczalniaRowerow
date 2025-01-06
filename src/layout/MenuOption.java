@@ -5,98 +5,103 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class MenuOption implements Screen {
+public class MenuOption extends JPanel implements Screen {
     private final String title;
     private final ImageIcon optionIcon;
-    private JPanel optionPanel;
-    private JLabel optionLabel;
+    private JLabel iconLabel;
+    private JLabel textLabel;
+    private boolean isActive;
+
 
     public MenuOption(String title, ImageIcon optionIcon) {
-        //this.setOpaque(false); // Panel MenuOption jest przezroczysty
         this.title = title;
         this.optionIcon = optionIcon;
-    }
 
-    // Getter dla optionPanel (leniwe tworzenie)
-    public JPanel getPanel() {
-        if (optionPanel == null) {
-            createPanel();
-        }
-        return optionPanel;
-    }
+        // Konfiguracja głównego panelu
+        setLayout(new BorderLayout());
+        setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        setOpaque(false); // Panel będzie zaokrąglony z własnym rysowaniem
 
-    // Tworzenie głównego panelu opcji
-    private void createPanel() {
-        optionPanel = createRoundedPanel(new Color(33, 42, 49)); // Kolor tła
-        optionPanel.setLayout(new BorderLayout());
-        optionPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        optionPanel.setOpaque(true);
-        createOptionLabel();
-        optionPanel.add(optionLabel, BorderLayout.CENTER);
+        // Tworzenie ikonki i etykiety
+        createComponents();
 
         // Dodanie efektów myszki
         addMouseEffect();
     }
 
-    // Tworzenie etykiety opcji z tytułem i ikoną
-    private void createOptionLabel() {
-        optionLabel = new JLabel(title);
-        optionLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
-        optionLabel.setForeground(Color.WHITE);
-        optionLabel.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
-        optionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
+    private void createComponents() {
+        // Ikona po lewej stronie
         if (optionIcon != null) {
-            optionPanel.add(new JLabel(optionIcon) , BorderLayout.WEST);
+            iconLabel = new JLabel(optionIcon);
+            iconLabel.setHorizontalAlignment(SwingConstants.LEFT);
+            add(iconLabel, BorderLayout.WEST);
         }
 
+        // Tekst wyśrodkowany
+        textLabel = new JLabel(title);
+        textLabel.setFont(new Font("SansSerif", Font.BOLD, 24));
+        textLabel.setForeground(Color.WHITE);
+        textLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(textLabel, BorderLayout.CENTER);
     }
 
-
-    // Dodanie efektów myszki do panelu
     private void addMouseEffect() {
-        optionPanel.addMouseListener(new MouseAdapter() {
+        addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                optionPanel.setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
-                optionPanel.repaint();
+                setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
+                repaint();
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-                optionPanel.setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
-                optionPanel.repaint();
+                setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
+                repaint();
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                optionPanel.setBackground(Colors.DARK_BLUE.getColor());
-                optionPanel.repaint();
+                setBackground(Colors.DARK_BLUE.getColor());
+                repaint();
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                optionPanel.setOpaque(true);
-                optionPanel.setBackground(Colors.DARK_BLUE_HOVER.getColor());
-                optionPanel.setOpaque(false);
-                optionPanel.repaint();
+                setBackground(Colors.DARK_BLUE_HOVER.getColor());
+                repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-                optionPanel.setOpaque(true);
-                optionPanel.setBackground(Colors.DARK_BLUE.getColor());
-                optionPanel.setOpaque(true);
-                optionPanel.repaint();
+                if(isActive) {
+                    setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
+                    return;
+                }
+                setBackground(Colors.DARK_BLUE.getColor());
+                repaint();
             }
         });
     }
 
-    // Ustawienie koloru tła dla opcji
-    public void setOptionBackground(Color color) {
-        if (optionPanel != null) {
-            optionPanel.setBackground(color);
-            optionPanel.repaint();
-        }
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+
+        // Rysowanie zaokrąglonego panelu
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Rysowanie tła
+        g2d.setColor(getBackground() != null ? getBackground() : new Color(33, 42, 49));
+        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20); // Promień zaokrąglenia: 20
+
+        g2d.dispose();
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+    public void setIsActive(boolean active){
+        isActive = active;
     }
 }

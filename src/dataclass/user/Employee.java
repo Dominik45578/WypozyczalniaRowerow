@@ -12,8 +12,9 @@ public class Employee extends Customer implements User{
 
 
 
-    public Employee(String customerId, String firstName, String secondName, String lastName, String pesel, String postalCode, String city, String address) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address);
+    public Employee(String customerId, String firstName, String secondName, String lastName, String pesel,
+                    String postalCode, String city, String address, String email) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email);
     }
 
     public String getEmployeeId() {
