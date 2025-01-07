@@ -41,7 +41,7 @@ public class RentalTransaction {
     }
 
     public LocalDateTime getRentalEnd() {
-
+        //rentalEnd = LocalDateTime.now().minusDays(10);
         return rentalEnd;
     }
     public String getTransactionID(){

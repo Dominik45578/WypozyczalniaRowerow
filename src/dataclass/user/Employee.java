@@ -9,6 +9,10 @@ public class Employee extends Customer implements User{
     private String lastName;
     private String position; // Rola pracownika
     private BusinessCustomer employer; // Powiązana firma
+    public static Employee createNewEmployee(){
+        return new Employee("null","null","null","null",
+                  "null","null","null","null","null");
+    }
 
 
 

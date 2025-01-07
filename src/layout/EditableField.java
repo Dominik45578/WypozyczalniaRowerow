@@ -9,9 +9,10 @@ public class EditableField extends JPanel {
     private JButton editButton;
 
     public EditableField(String fieldName, String initialValue) {
-        setLayout(new BorderLayout(10, 0));
+        this.setMinimumSize(new Dimension(300,150));
+        setLayout(new BorderLayout(10, 10));
         setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(20,20,20,20));
+        setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
         setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
 
         // Label for the field name
@@ -31,10 +32,13 @@ public class EditableField extends JPanel {
 
         // Button for editing the value
         editButton = new JButton("Edytuj");
-        editButton.setFont(new Font("SansSerif", Font.BOLD, 20));
-        editButton.setBackground(Color.GRAY);
+        editButton.setFont(new Font("SansSerif", Font.BOLD, 16));
+        editButton.setBackground(Colors.DARK_BLUE_HOVER.getColor());
+        editButton.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
         editButton.setForeground(Color.WHITE);
+        editButton.setFocusPainted(false);
         add(editButton, BorderLayout.EAST);
+        editButton.setVisible(false);
 
         // Add a simple action listener (no functionality for now)
         editButton.addActionListener(e -> {

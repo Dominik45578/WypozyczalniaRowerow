@@ -21,6 +21,7 @@ public abstract class Customer implements User, Serializable {
     protected String lastName;
     protected int numberOfRentedItems;
     protected String email;
+    protected String phoneNumber;
     protected Map<String, Object> rentedItems = new HashMap<>();
     protected Map<String , RentalTransaction> rentedHistory = new HashMap<>();
 
@@ -37,9 +38,23 @@ public abstract class Customer implements User, Serializable {
         this.lastName = lastName;
         this.email = email;
         numberOfRentedItems = 0;
+        this.phoneNumber = "Brak";
     }
 
     // Getters and Setters
+
+    public void setRentedItems(Map<String, Object> rentedItems) {
+        this.rentedItems = rentedItems;
+    }
+
+    public Map<String, RentalTransaction> getRentedHistory() {
+        return rentedHistory;
+    }
+
+    public void setRentedHistory(Map<String, RentalTransaction> rentedHistory) {
+        this.rentedHistory = rentedHistory;
+    }
+
     public String getCustomerId() {
         return customerId;
     }
@@ -114,6 +129,14 @@ public abstract class Customer implements User, Serializable {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     @Override
