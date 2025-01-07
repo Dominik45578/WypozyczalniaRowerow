@@ -1,15 +1,14 @@
 // PrivateCustomer Class
 package dataclass.user;
 
-import layout.Users;
-
 /**
  * Class representing a private customer.
  */
 public class PrivateCustomer extends Customer implements User {
 
-    public PrivateCustomer(String customerId, String firstName, String secondName, String lastName, String pesel, String postalCode, String city, String address) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address);
+    public PrivateCustomer(String customerId, String firstName, String secondName, String lastName,
+                           String pesel, String postalCode, String city, String address, String email) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address,email);
     }
 
     @Override

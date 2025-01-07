@@ -1,14 +1,13 @@
 
 package dataclass.user;
 
-import layout.Users;
-
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  * Interface representing a generic User.
  */
-public interface User {
+public interface User extends Serializable {
 
     /**
      * Gets the unique identifier of the user.

@@ -28,7 +28,7 @@ public class LoginScreen extends ScreenUtil {
         leftPanel.add(registerPanel, BorderLayout.SOUTH);
         // Prawy panel - formularz logowania
         JPanel rightPanel = createRoundedPanel(new Color(68, 68, 68));
-        rightPanel.setLayout(new GridLayout(5, 1, 40, 10));
+        rightPanel.setLayout(new GridLayout(4, 1, 40, 10));
         rightPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
         rightPanel.setOpaque(false);
 

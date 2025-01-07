@@ -1,11 +1,9 @@
 package dataclass.user;
 
 import dataclass.rental.RentalSystemManager;
-import dataclass.user.User;
 import dataclass.vehicle.Vehicle;
-import dataclass.vehicle.ScooterBrand;
-import dataclass.vehicle.ScooterModel;
-import layout.Users;
+import dataclass.vehicle.VehicleBrand;
+import dataclass.vehicle.VehicleModel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,16 +71,16 @@ public class RootUser implements User {
      * @param brand     the brand to which the model will be added.
      * @param modelName the name of the model to add.
      */
-    public void addModel(ScooterBrand brand, String modelName) {
+    public void addModel(VehicleBrand brand, String modelName) {
         systemManager.addModel(brand, modelName);
     }
 
     /**
      * Pobiera wszystkie dostępne marki
      *
-     * @return a map of brand names to `ScooterBrand` objects.
+     * @return a map of brand names to `VehicleBrand` objects.
      */
-    public Map<String, ScooterBrand> getAllBrands() {
+    public Map<String, VehicleBrand> getAllBrands() {
         return systemManager.getAllBrands();
     }
 
@@ -91,7 +89,7 @@ public class RootUser implements User {
      *
      * @return a map of brands to their respective models.
      */
-    public Map<ScooterBrand, Map<String, ScooterModel>> getAllModels() {
+    public Map<VehicleBrand, Map<String, VehicleModel>> getAllModels() {
         return systemManager.getAllModels();
     }
 

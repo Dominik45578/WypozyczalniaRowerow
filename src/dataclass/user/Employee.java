@@ -1,6 +1,5 @@
 package dataclass.user;
 
-import layout.Users;
 
 import java.util.Map;
 
@@ -10,11 +9,16 @@ public class Employee extends Customer implements User{
     private String lastName;
     private String position; // Rola pracownika
     private BusinessCustomer employer; // Powiązana firma
+    public static Employee createNewEmployee(){
+        return new Employee("null","null","null","null",
+                  "null","null","null","null","null");
+    }
 
 
 
-    public Employee(String customerId, String firstName, String secondName, String lastName, String pesel, String postalCode, String city, String address) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address);
+    public Employee(String customerId, String firstName, String secondName, String lastName, String pesel,
+                    String postalCode, String city, String address, String email) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email);
     }
 
     public String getEmployeeId() {

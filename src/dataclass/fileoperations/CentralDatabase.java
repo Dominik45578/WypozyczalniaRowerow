@@ -1,5 +1,7 @@
 package dataclass.fileoperations;
 
+import dataclass.user.User;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -9,10 +11,13 @@ public class CentralDatabase {
     private static CentralDatabase instance;
     private final Map<Class<?>, FileDataManager<?>> managers;
     private final Map<Class<?>, Map<String, ?>> cachedData;
+    private User currentUser;
+    private FileDataManager<User> userFileDataManager; // FileDataManager dla użytkowników
 
     private CentralDatabase() {
         managers = new HashMap<>();
         cachedData = new HashMap<>();
+        currentUser = null;
     }
 
     public static synchronized CentralDatabase getInstance() {
@@ -27,6 +32,10 @@ public class CentralDatabase {
         cachedData.put(type, manager.loadAll()); // Wczytujemy dane przy rejestracji
     }
 
+    public void setUserFileDataManager(FileDataManager<User> manager) {
+        this.userFileDataManager = manager;
+    }
+
     public <T> void addObject(Class<T> type, String id, T object) {
         @SuppressWarnings("unchecked")
         Map<String, T> data = (Map<String, T>) cachedData.get(type);
@@ -36,7 +45,6 @@ public class CentralDatabase {
         data.put(id, object);
     }
 
-    // Pobranie obiektu z bazy
     public <T> T getObject(Class<T> type, String id) {
         @SuppressWarnings("unchecked")
         Map<String, T> data = (Map<String, T>) cachedData.get(type);
@@ -46,7 +54,6 @@ public class CentralDatabase {
         return data.get(id);
     }
 
-    // Pobranie wszystkich obiektów danego typu
     public <T> Map<String, T> getAllObjects(Class<T> type) {
         @SuppressWarnings("unchecked")
         Map<String, T> data = (Map<String, T>) cachedData.get(type);
@@ -56,7 +63,6 @@ public class CentralDatabase {
         return new HashMap<>(data); // Zwracamy kopię danych
     }
 
-    // Usunięcie obiektu z bazy
     public <T> boolean removeObject(Class<T> type, String id) {
         @SuppressWarnings("unchecked")
         Map<String, T> data = (Map<String, T>) cachedData.get(type);
@@ -71,23 +77,42 @@ public class CentralDatabase {
             Class<?> type = entry.getKey();
             FileDataManager<?> manager = entry.getValue();
 
-            // Pobieramy dane z cache
             @SuppressWarnings("unchecked")
             Map<String, ?> data = cachedData.get(type);
 
             if (data != null) {
-                // Bezpieczne rzutowanie managera i danych do odpowiednich typów
                 saveAllWithType(manager, data);
             }
         }
     }
 
-    // Pomocnicza metoda generyczna do zapisu danych
     private <T extends Serializable> void saveAllWithType(FileDataManager<T> manager, Map<String, ?> data) throws IOException {
-    //private <T> void saveAllWithType(FileDataManager<T> manager, Map<String, ?> data) throws IOException {
         @SuppressWarnings("unchecked")
         Map<String, T> typedData = (Map<String, T>) data;
         manager.saveAll(typedData);
     }
-}
 
+    public void setUser(User user) {
+        currentUser = user;
+    }
+
+    public User getUser() {
+        return currentUser;
+    }
+
+    public void removeUser() {
+        if (currentUser != null) {
+            try {
+                // Zapisz dane bieżącego użytkownika do pliku
+                if (userFileDataManager != null) {
+                    userFileDataManager.save(currentUser.getId(), currentUser);
+                } else {
+                    throw new IllegalStateException("User FileDataManager is not set");
+                }
+            } catch (IOException e) {
+                System.err.println("Error saving user data: " + e.getMessage());
+            }
+        }
+        currentUser = null; // Usuń użytkownika
+    }
+}

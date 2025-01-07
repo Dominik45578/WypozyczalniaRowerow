@@ -8,12 +8,17 @@ import dataclass.user.User;
  * Class representing a single-track vehicle.
  */
 public class SingleTrackVehicle implements Vehicle {
+    public static final String BROKEN ="broken";
+    public static final String OCCUPIED ="occupied";
+    public static final String FREE ="free";
 
     private boolean rented;
-    private String vehicleType;
-    private String vehicleModel;
-    private String vehicleId;
     private User renter;
+    private final String vehicleType;
+    private final String vehicleModel;
+    private final String vehicleId;
+    private String status;
+
 
     // Constructor
     public SingleTrackVehicle(){
@@ -25,6 +30,14 @@ public class SingleTrackVehicle implements Vehicle {
         this.vehicleModel = vehicleModel;
         this.rented = true;
         this.renter = null;
+    }
+    @Override
+    public String getStatus(){
+        return status;
+    }
+    @Override
+    public void setStatus(String status){
+        this.status = status;
     }
 
     @Override
@@ -57,11 +70,14 @@ public class SingleTrackVehicle implements Vehicle {
     public void rentVehicle(User user) {
         this.renter = user;
         this.rented = true;
+        this.status = OCCUPIED;
     }
 
     // Clear renter and update rented status
     public void returnVehicle() {
         this.renter = null;
         this.rented = false;
+        this.status = FREE;
     }
+
 }
