@@ -5,8 +5,6 @@ import java.util.Map;
 
 public class Employee extends Customer implements User{
     private String employeeId;
-    private String firstName;
-    private String lastName;
     private String position; // Rola pracownika
     private BusinessCustomer employer; // Powiązana firma
     public static Employee createNewEmployee(){
@@ -25,14 +23,6 @@ public class Employee extends Customer implements User{
         return employeeId;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
     public String getPosition() {
         return position;
     }
@@ -42,19 +32,21 @@ public class Employee extends Customer implements User{
     }
 
     @Override
-    public String getId() {
-        return "";
-    }
-
-    @Override
     public int getNumberOfRentedItems() {
-        return 0;
+        return rentedItems.size();
     }
 
     @Override
-    public Map<String, Object> getRentedItems() {
-        return Map.of();
+    public String getID() {
+        return employeeId;
     }
+
+    @Override
+    public void setID(String id) {
+        employeeId = id;
+
+    }
+
 
     @Override
     public Users getUserType() {

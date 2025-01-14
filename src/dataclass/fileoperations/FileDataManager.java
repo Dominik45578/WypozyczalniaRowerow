@@ -13,7 +13,7 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
     private final String filePrefix;
 
     public FileDataManager(String folderPath, String filePrefix) {
-        this.folderPath = folderPath.endsWith("/") ? folderPath : folderPath + "/";
+        this.folderPath = "data/"+(folderPath.endsWith("/") ? folderPath : folderPath + "/");
         this.filePrefix = filePrefix;
 
         // Tworzymy folder, jeśli nie istnieje
@@ -105,5 +105,10 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
 
     private String extractIdFromFileName(String fileName) {
         return fileName.substring(0, fileName.lastIndexOf(".dat"));
+    }
+    private int extractDecimalIdFromFileName(String fileName){
+        String id = extractIdFromFileName(fileName);
+        String intId = id.replace(filePrefix,"");
+        return Integer.parseInt(intId);
     }
 }

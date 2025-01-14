@@ -106,8 +106,12 @@ public class BusinessCustomer extends Customer implements User {
     }
 
     @Override
-    public String getId() {
+    public String getID() {
         return companyId;
+    }
+
+    @Override
+    public void setID(String id) {
     }
 
      @Override

@@ -1,27 +1,22 @@
 package layout;
 
+import layout.ContentField;
+
 import javax.swing.*;
 import java.awt.*;
 
-public class EditableField extends JPanel {
-    private JLabel label;
+public class EditableField extends ContentField {
     private JTextField textField;
     private JButton editButton;
 
     public EditableField(String fieldName, String initialValue) {
-        this.setMinimumSize(new Dimension(300,150));
-        setLayout(new BorderLayout(10, 10));
-        setOpaque(false);
-        setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
-        setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
+        super(fieldName , Colors.DARK_BLUE_ACTIVE.getColor(), new Dimension(300, 150));
 
-        // Label for the field name
-        label = new JLabel(fieldName + ":");
+        // Text field to show the current value
         label.setForeground(Color.WHITE);
         label.setFont(new Font("SansSerif", Font.BOLD, 20));
         add(label, BorderLayout.WEST);
 
-        // Text field to show the current value
         textField = new JTextField(initialValue);
         textField.setEditable(false); // Initially not editable
         textField.setOpaque(false);
@@ -42,7 +37,6 @@ public class EditableField extends JPanel {
 
         // Add a simple action listener (no functionality for now)
         editButton.addActionListener(e -> {
-            // Placeholder: Just enable editing for now
             textField.setEditable(true);
             textField.requestFocus();
         });

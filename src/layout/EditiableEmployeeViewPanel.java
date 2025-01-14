@@ -53,7 +53,7 @@ public class EditiableEmployeeViewPanel extends AbstractEditablePanel {
         employeePanel.setPreferredSize(new Dimension(500, 80));
 
         // Dodajemy dane pracownika
-        employeePanel.add(new JLabel("ID: " + employee.getId()), BorderLayout.WEST);
+        employeePanel.add(new JLabel("ID: " + employee.getID()), BorderLayout.WEST);
         employeePanel.add(new JLabel("Imię: " + employee.getFirstName()), BorderLayout.EAST);
 
         return employeePanel;

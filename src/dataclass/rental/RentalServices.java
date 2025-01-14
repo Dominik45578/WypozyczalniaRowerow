@@ -1,6 +1,8 @@
 package dataclass.rental;
 
+import dataclass.fileoperations.CentralDatabase;
 import dataclass.rental.RentalService;
+import dataclass.user.Customer;
 import dataclass.user.User;
 import dataclass.vehicle.Vehicle;
 
@@ -24,6 +26,16 @@ public class RentalServices implements RentalService {
             instance = new RentalServices();
         }
         return instance;
+    }
+    public List<RentalTransaction> getTransactionHistory() {
+        List<RentalTransaction> transactions = new ArrayList<>();
+        Map<String, Customer> customers = CentralDatabase.getInstance().getAllObjects(Customer.class);
+
+        for (Customer customer : customers.values()) {
+            transactions.addAll(customer.getRentedHistory().values());
+        }
+
+        return transactions;
     }
 
     @Override

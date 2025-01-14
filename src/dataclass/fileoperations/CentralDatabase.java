@@ -1,6 +1,7 @@
 package dataclass.fileoperations;
 
-import dataclass.user.User;
+import dataclass.user.*;
+import dataclass.vehicle.*;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -12,12 +13,39 @@ public class CentralDatabase {
     private final Map<Class<?>, FileDataManager<?>> managers;
     private final Map<Class<?>, Map<String, ?>> cachedData;
     private User currentUser;
-    private FileDataManager<User> userFileDataManager; // FileDataManager dla użytkowników
+    private FileDataManager<User> userFileDataManager;
+    private void createDefaultManagers(){
+        try {
+            registerManager(PrivateCustomer.class, new FileDataManager<PrivateCustomer>(PrivateCustomer.class.getSimpleName(), User.PRIVATE_C_PREFIX));
+            registerManager(BusinessCustomer.class, new FileDataManager<BusinessCustomer>(BusinessCustomer.class.getSimpleName(), User.BUSINESS_C_PREFIX));
+            registerManager(Employee.class, new FileDataManager<Employee>(Employee.class.getSimpleName(), User.EMPLOYEE_C_PREFIX));
+            registerManager(RootUser.class, new FileDataManager<RootUser>(RootUser.class.getSimpleName(), User.ROOT_PREFIX));
+
+            registerManager(Bike.class, new FileDataManager<Bike>(Bike.class.getSimpleName(), SingleTrackVehicle.STV_BIKE_PREFIX));
+            registerManager(EBike.class, new FileDataManager<EBike>(EBike.class.getSimpleName(), SingleTrackVehicle.STV_E_BIKE_PREFIX));
+            registerManager(Scooter.class, new FileDataManager<Scooter>(Scooter.class.getSimpleName(), SingleTrackVehicle.STV_SCOOTER_PREFIX));
+        } catch (IOException e) {
+            System.out.println("Problem z menadżerem klasy!");
+        }
+    }
+    public void loadAll() throws IOException {
+        saveAll();
+        for (Map.Entry<Class<?>, FileDataManager<?>> entry : managers.entrySet()) {
+            Class<?> type = entry.getKey();
+            FileDataManager<?> manager = entry.getValue();
+
+            @SuppressWarnings("unchecked")
+            Map<String, Object> data = (Map<String, Object>) manager.loadAll();
+
+            cachedData.put(type, data);
+        }
+    }
 
     private CentralDatabase() {
         managers = new HashMap<>();
         cachedData = new HashMap<>();
         currentUser = null;
+        createDefaultManagers();
     }
 
     public static synchronized CentralDatabase getInstance() {
@@ -105,7 +133,7 @@ public class CentralDatabase {
             try {
                 // Zapisz dane bieżącego użytkownika do pliku
                 if (userFileDataManager != null) {
-                    userFileDataManager.save(currentUser.getId(), currentUser);
+                    userFileDataManager.save(currentUser.getID(), currentUser);
                 } else {
                     throw new IllegalStateException("User FileDataManager is not set");
                 }
@@ -114,5 +142,13 @@ public class CentralDatabase {
             }
         }
         currentUser = null; // Usuń użytkownika
+    }
+    public <T> int getCount(Class<T> type) {
+        @SuppressWarnings("unchecked")
+        Map<String, T> data = (Map<String, T>) cachedData.get(type);
+        if (data == null) {
+            throw new IllegalArgumentException("No manager registered for type: " + type.getName());
+        }
+        return data.size();
     }
 }

@@ -36,8 +36,10 @@ public interface Screen {
             }
         };
     }
-
-    default JButton createRoundedButton(String text, Color background, Color foreground, Font font) {
+default JButton createRoundedButton(String text , int size){
+       return createRoundedButton(text, Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE, new Font("SansSerif", Font.PLAIN, size));
+}
+default JButton createRoundedButton(String text, Color background, Color foreground, Font font) {
     JButton button = new JButton(text) {
         @Override
         protected void paintComponent(Graphics g) {
@@ -46,10 +48,19 @@ public interface Screen {
 
             // Narysowanie zaokrąglonego tła
             g2d.setColor(background);
-            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30); // Zaokrąglone rogi
+            g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
 
-            // Wywołanie domyślnego renderowania treści (tekst, ikony)
-            super.paintComponent(g);
+            // Rysowanie obramowania (opcjonalne)
+            g2d.setColor(background.darker());
+            g2d.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
+
+            // Rysowanie tekstu i ikon
+            FontMetrics fm = g2d.getFontMetrics();
+            int textX = (getWidth() - fm.stringWidth(getText())) / 2;
+            int textY = (getHeight() + fm.getAscent() - fm.getDescent()) / 2;
+            g2d.setColor(getForeground());
+            g2d.setFont(getFont());
+            g2d.drawString(getText(), textX, textY);
 
             g2d.dispose();
         }
@@ -64,11 +75,13 @@ public interface Screen {
     button.setFont(font);
     button.setFocusPainted(false); // Usuń obramowanie focusa
     button.setOpaque(false); // Wyłącz domyślne wypełnienie
+    button.setContentAreaFilled(false);
+    button.setBorderPainted(false);
     button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Ustawienia marginesów wewnętrznych
     return button;
 }
 
- default JButton createButton(String text, Color background, Color foreground, Font font) {
+    default JButton createButton(String text, Color background, Color foreground, Font font) {
         JButton button = new JButton(text);
         button.setBackground(background);
         button.setForeground(foreground);
@@ -102,9 +115,12 @@ public interface Screen {
         return checkBox;
     }
 
+    default JPanel createFormWrapper(String title , String label){
+        return createFormWrapper(title);
+    }
     default JPanel createFormWrapper(String title) {
         JPanel formWrapper = createRoundedPanel(new Color(85, 84, 84));//new Color(218, 237, 248));
-        formWrapper.setLayout(new BorderLayout(10,20));
+        formWrapper.setLayout(new BorderLayout(10,10));
         formWrapper.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         formWrapper.setOpaque(false);
         JLabel formTitle = new JLabel(title + " : ");

@@ -2,10 +2,12 @@
 // Updated Scooter class
 package dataclass.vehicle;
 
+import java.io.Serializable;
+
 /**
  * Class representing a Scooter, extending SingleTrackVehicle.
  */
-public class Scooter extends SingleTrackVehicle implements Vehicle{
+public class Scooter extends SingleTrackVehicle implements Vehicle, Serializable {
 
     private int batteryLevel;
     public Scooter(int value){

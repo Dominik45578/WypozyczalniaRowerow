@@ -1,7 +1,11 @@
 package layout;
 
 import dataclass.fileoperations.CentralDatabase;
+import dataclass.fileoperations.FileDataManager;
+import dataclass.rental.RentalServices;
+import dataclass.rental.RentalTransaction;
 import dataclass.user.*;
+import dataclass.vehicle.Bike;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
@@ -9,8 +13,11 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -49,14 +56,24 @@ public class MainScreen extends ScreenUtil {
     MainScreen() {
         super("Guckor Bike Rental - Login", 1400, 800);
         lastElement = -1;
-        CentralDatabase.getInstance().setUser(new BusinessCustomer("BC001", "Dominik", "Michał", "Koralik", "0429265555",
+        Customer c = new BusinessCustomer("BC001", "Dominik", "Michał", "Koralik", "0429265555",
                 "31-866", "Kraków", "Skarżyńskiego 9", "dkkd3046@gmail.com", "Guckor", "BC001",
-                "Warszawska 24", "31-234", "Kraków"));
+                "Warszawska 24", "31-234", "Kraków");
+        CentralDatabase.getInstance().setUser(c);
         customer = CentralDatabase.getInstance().getUser();
+        FileDataManager<Customer> customerManager = new FileDataManager<>("customer" , User.BUSINESS_C_PREFIX);
+        try {
+            CentralDatabase.getInstance().registerManager(Customer.class, customerManager);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        CentralDatabase.getInstance().addObject(Customer.class, c.getID(), c);
+        RentalTransaction t = new RentalTransaction(new Bike("B001", "Default" , "Crtoss Hexagon 2" , false),c);
+        c.getRentedHistory().put(t.getTransactionID(),t);
     }
 
     @Override
-    protected void createScreenContent() {
+    protected void createScreenContent(User user) {
         centralPanel.setLayout(new BorderLayout(10, 10));
 
         // Tworzenie i dodawanie paneli
@@ -65,6 +82,11 @@ public class MainScreen extends ScreenUtil {
 
         centralPanel.add(upperContentPanel, BorderLayout.NORTH);  // Górny panel
         centralPanel.add(formPanel, BorderLayout.CENTER);  // Centralny panel
+    }
+
+    @Override
+    protected void addListener(Component component, Runnable action) {
+
     }
 
     private JPanel createUpperPanel() {
@@ -232,6 +254,32 @@ public class MainScreen extends ScreenUtil {
         historyPanel.setLayout(new GridLayout(30,1,10,10));
         changeLastElement(MenuOptionPosition.HISTORY.getIndex());
 
+        // Pobieramy historię wypożyczeń użytkownika
+        List<RentalTransaction> transactions = RentalServices.getInstance().getTransactionHistory();
+
+        // Iterujemy przez transakcje i wyświetlamy je w panelu
+        for (RentalTransaction transaction : transactions) {
+            JPanel transactionPanel = new JPanel();
+            transactionPanel.setLayout(new GridLayout(1, 4));
+
+            // Wyświetlanie danych w zależności od roli użytkownika
+            if (customer instanceof BusinessCustomer) {
+                JLabel usernameLabel = new JLabel(transaction.getUser().getFirstName());
+                transactionPanel.add(usernameLabel);
+            }
+
+            JLabel bikeBrandLabel = new JLabel(transaction.getVehicle().getVehicleModel());
+            transactionPanel.add(bikeBrandLabel);
+
+            JLabel startDateLabel = new JLabel(transaction.getRentalStart().toString());
+            transactionPanel.add(startDateLabel);
+
+            JLabel endDateLabel = new JLabel(transaction.getRentalEnd() != null ? transaction.getRentalEnd().toString() : "N/A");
+            transactionPanel.add(endDateLabel);
+
+            historyPanel.add(transactionPanel);
+        }
+
         updateLayerContent(historyPanel);
     }
 
@@ -343,8 +391,8 @@ public class MainScreen extends ScreenUtil {
         Customer customer = (Customer) company;
         EditableField ownerCompanyNameField = new EditableField("Imię", customer.getFirstName() + customer.getSecondName());
         EditableField ownerCompanyLastNameField = new EditableField("Nazwisko ", customer.getLastName());
-        EditableField ownerCompanyIdField = new EditableField("ID użytkownika", customer.getCustomerId());
-        EditableField ownerCompanyPhoneField = new EditableField("Numer telefonu ", customer.getCustomerId());
+        EditableField ownerCompanyIdField = new EditableField("ID użytkownika", customer.getID());
+        EditableField ownerCompanyPhoneField = new EditableField("Numer telefonu ", customer.getID());
         EditableField ownerCompanyEmailField = new EditableField("Adress e-mail", customer.getEmail());
         EditableField ownerCompanyAddressField = new EditableField("Adres ", customer.getAddress());
         EditableField ownerCompanyCityField = new EditableField("Miasto", customer.getCity());
