@@ -227,7 +227,7 @@ public class EditableTogglePanel extends AbstractEditablePanel {
 
 
     public EditableTogglePanel(String title, String type, String predecessor) {
-        super(new Dimension(550, 450), title, type);
+        super(new Dimension(700, 600), title, type);
 
         // Configure content panel
         contentPanel.setLayout(new GridLayout(8, 1, 10, 10));
@@ -252,6 +252,12 @@ public class EditableTogglePanel extends AbstractEditablePanel {
         passwordErrorLabel = createErrorLabel("Hasło musi zawierać przynajmniej 8 znaków");
         postalCodeErrorLabel = createErrorLabel("Niepoprawny kod pocztowy");
 
+        closeLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                setElementVisible(false);
+            }
+        });
         contentPanel.add(sizeErrorLabel);
         contentPanel.add(emailErrorLabel);
         contentPanel.add(passwordErrorLabel);

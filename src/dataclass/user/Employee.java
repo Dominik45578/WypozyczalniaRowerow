@@ -5,32 +5,23 @@ import java.util.Map;
 
 public class Employee extends Customer implements User{
     private String employeeId;
-    private String firstName;
-    private String lastName;
     private String position; // Rola pracownika
     private BusinessCustomer employer; // Powiązana firma
     public static Employee createNewEmployee(){
         return new Employee("null","null","null","null",
-                  "null","null","null","null","null");
+                  "null","null","null","null","null", "null");
     }
 
 
 
     public Employee(String customerId, String firstName, String secondName, String lastName, String pesel,
-                    String postalCode, String city, String address, String email) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email);
+                    String postalCode, String city, String address, String email, String password) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
+        employeeId = customerId;
     }
 
     public String getEmployeeId() {
         return employeeId;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
     }
 
     public String getPosition() {
@@ -42,18 +33,19 @@ public class Employee extends Customer implements User{
     }
 
     @Override
-    public String getId() {
-        return "";
-    }
-
-    @Override
     public int getNumberOfRentedItems() {
-        return 0;
+        return rentedItems.size();
     }
 
     @Override
-    public Map<String, Object> getRentedItems() {
-        return Map.of();
+    public String getID() {
+        return employeeId;
+    }
+
+    @Override
+    public void setID(String id) {
+        employeeId = id;
+
     }
 
     @Override

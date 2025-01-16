@@ -1,19 +1,24 @@
-// PrivateCustomer Class
 package dataclass.user;
 
 /**
  * Class representing a private customer.
  */
-public class PrivateCustomer extends Customer implements User {
+public class PrivateCustomer extends Customer {
 
     public PrivateCustomer(String customerId, String firstName, String secondName, String lastName,
-                           String pesel, String postalCode, String city, String address, String email) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address,email);
+                           String pesel, String postalCode, String city, String address, String email, String password) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
+    }
+
+
+    @Override
+    public String getID() {
+        return customerId;
     }
 
     @Override
-    public String getId() {
-        return customerId;
+    public void setID(String id) {
+        customerId = id;
     }
 
     @Override
