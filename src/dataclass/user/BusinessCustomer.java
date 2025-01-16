@@ -21,8 +21,8 @@ public class BusinessCustomer extends Customer implements User {
 
     public BusinessCustomer(String customerId, String firstName, String secondName, String lastName,
                             String pesel, String postalCode, String city, String address,String email,
-                            String companyName, String companyId, String companyAddress, String companyPostalCode, String companyCity) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email);
+                            String companyName, String companyId, String companyAddress, String companyPostalCode, String companyCity, String password) {
+        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
         this.companyName = companyName;
         this.companyId = companyId;
         this.companyAddress = companyAddress;
@@ -105,12 +105,18 @@ public class BusinessCustomer extends Customer implements User {
         return employees.size();
     }
 
+
     @Override
-    public String getId() {
+    public String getID() {
         return companyId;
     }
 
-     @Override
+    @Override
+    public void setID(String id) {
+
+    }
+
+    @Override
     public Users getUserType() {
         return Users.BUSINESS_CUSTOMER;
     }

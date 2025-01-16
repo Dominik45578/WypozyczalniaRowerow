@@ -1,6 +1,9 @@
 
 package dataclass.user;
 
+import dataclass.rental.RentalTransaction;
+import dataclass.vehicle.Vehicle;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -8,54 +11,50 @@ import java.util.Map;
  * Interface representing a generic User.
  */
 public interface User extends Serializable {
+    String PRIVATE_C_PREFIX = "PC";
+    String BUSINESS_C_PREFIX = "BC";
+    String EMPLOYEE_C_PREFIX = "EC";
+    String ROOT_PREFIX = "RC";
 
-    /**
-     * Gets the unique identifier of the user.
-     *
-     * @return the user ID.
-     */
-    String getId();
+    String getFirstName();
 
-    /**
-     * Gets the number of items rented by the user.
-     *
-     * @return the number of rented items.
-     */
+    void setFirstName(String firstName);
+
+    String getSecondName();
+
+    void setSecondName(String secondName);
+
+    String getLastName();
+
+    void setLastName(String lastName);
+
     int getNumberOfRentedItems();
 
-    /**
-     * Gets the rented items as a map.
-     *
-     * @return a map containing rented items.
-     */
-    Map<String, Object> getRentedItems();
+    void setNumberOfRentedItems(int numberOfRentedItems);
 
-    /**
-     * Adds a rented item to the user's list by ID.
-     *
-     * @param itemId the ID of the item to rent.
-     * @param itemDetails the details of the item to rent.
-     */
-    void rentItem(String itemId, Object itemDetails);
+    String getEmail();
 
-    /**
-     * Removes a rented item from the user's list by ID.
-     *
-     * @param itemId the ID of the item to return.
-     */
+    void setEmail(String email);
+
+    Map<String, Vehicle> getRentedItems();
+
+    void setRentedItems(Map<String, Vehicle> rentedItems);
+
+    Map<String, RentalTransaction> getRentedHistory();
+
+    void setRentedHistory(Map<String, RentalTransaction> rentedHistory);
+
+    String getID();
+    void setID(String id);
+
+    void rentItem(String itemId, Vehicle vehicle);
+
     void returnItem(String itemId);
 
-    /**
-     * Removes a rented item by its ID.
-     *
-     * @param itemId the ID of the item to remove.
-     */
     void removeRentedItem(String itemId);
 
-    /**
-     * Gets the type of the user.
-     *
-     * @return the user type.
-     */
     Users getUserType();
+
+    String getPassword();
+    void setPassword(String password);
 }

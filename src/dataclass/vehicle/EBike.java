@@ -1,10 +1,12 @@
 // Updated EBike class
 package dataclass.vehicle;
 
+import java.io.Serializable;
+
 /**
  * Class representing an Electric Bike, extending SingleTrackVehicle.
  */
-public class EBike extends SingleTrackVehicle implements Vehicle{
+public class EBike extends SingleTrackVehicle implements Vehicle, Serializable {
 
     private int batteryLevel;
 

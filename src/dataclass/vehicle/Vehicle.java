@@ -2,67 +2,38 @@ package dataclass.vehicle;
 
 import dataclass.user.User;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 /**
  * Interface representing a generic Vehicle.
  */
-public interface Vehicle {
+public interface Vehicle extends Serializable {
 
-
-    /**
-     * Checks if the vehicle is currently rented.
-     *
-     * @return true if the vehicle is rented, false otherwise.
-     */
     String getStatus();
-    void setStatus(String status);
-     boolean isRented();
 
-    /**
-     * Gets the user who has rented the vehicle.
-     *
-     * @return the user renting the vehicle, or null if not rented.
-     */
+    void setStatus(String status);
+
+    boolean isRented();
+
+
     User getRenter();
 
-    /**
-     * Gets the unique identifier of the vehicle.
-     *
-     * @return the vehicle ID.
-     */
-
     void rentVehicle(User user);
+
     void returnVehicle();
+
     String getVehicleId();
 
-
-    /**
-     * Gets the name of the vehicle.
-     *
-     * @return the vehicle name.
-     */
     String getVehicleType();
 
-    /**
-     * Gets the model of the vehicle.
-     *
-     * @return the vehicle model.
-     */
-
-    /**
-     *
-     * @return
-     */
     String getVehicleModel();
-    default boolean isElectric(){
+
+    default boolean isElectric() {
         return false;
     }
 
-    /**
-     * Gets the battery level of vehicle.If battery do not exist return -1
-     *
-     * @return the vehicle battery level (0,100) or -1 if battery do not exist
-     */
-    default int getBatteryLevel(){
+    default int getBatteryLevel() {
         return -1;
     }
 

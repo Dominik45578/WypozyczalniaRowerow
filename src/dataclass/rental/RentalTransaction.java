@@ -3,12 +3,13 @@ package dataclass.rental;
 import dataclass.vehicle.Vehicle;
 import dataclass.user.User;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * Class to handle rental transactions.
  */
-public class RentalTransaction {
+public class RentalTransaction implements Serializable{
     private static int lastNumber;
     private final Vehicle vehicle;
     private final User user;
@@ -20,8 +21,9 @@ public class RentalTransaction {
         this.vehicle = vehicle;
         this.user = user;
         this.rentalStart = LocalDateTime.now();
-        this.transactionID = user.getId()+vehicle.getVehicleId()+rentalStart+lastNumber;
+        this.transactionID = user.getID()+vehicle.getVehicleId()+rentalStart+lastNumber;
         lastNumber++;
+        user.rentItem(vehicle.getVehicleId(), vehicle);
     }
 
     public void endRental() {

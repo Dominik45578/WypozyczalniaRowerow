@@ -2,6 +2,7 @@ package layout;
 
 import dataclass.vehicle.Scooter;
 import dataclass.vehicle.SingleTrackVehicle;
+import dataclass.vehicle.Vehicle;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,13 +15,13 @@ public class ContentPanel extends JPanel implements Screen {
     SingleTrackVehicle vehicle;
     JButton rentButon;
 
-    public ContentPanel(int value) {
-        vehicle = new Scooter(value);
+    public ContentPanel(Vehicle vehicle) {
+        this.vehicle= (SingleTrackVehicle) vehicle;
         this.setOpaque(false); // Ustawienie przezroczystości, aby zaokrąglone rogi były widoczne
         this.setBackground(Colors.DARK_BLUE.getColor());
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         this.setLayout(new GridLayout(1, 5, 10, 10));
-
+        this.setPreferredSize(new Dimension(0,100));
         if (!vehicle.isElectric()) {
             batteryLevelPanel = null;
         } else {
