@@ -2,6 +2,7 @@ package layout;
 
 import dataclass.fileoperations.CentralDatabase;
 import dataclass.user.User;
+import dataclass.user.Users;
 
 import javax.swing.*;
 import java.awt.*;
@@ -63,12 +64,12 @@ public abstract class ScreenUtil implements Screen {
         System.out.println("Załadowano obiekty");
     }
 
-    protected abstract void createScreenContent(User user);
+    protected abstract void createScreenContent(Users user);
     protected abstract void addListener(Component component, Runnable action);
 
-    public void showScreen() {
+    public void showScreen(Users user) {
         centralPanel.removeAll(); // Usuwamy starą zawartość
-        createScreenContent(CentralDatabase.getInstance().getCurrentUser());    // Tworzymy nową zawartość
+        createScreenContent(user);    // Tworzymy nową zawartość
         rightBackPanel.revalidate();
         rightBackPanel.repaint();
         rightBackPanel.setVisible(true);

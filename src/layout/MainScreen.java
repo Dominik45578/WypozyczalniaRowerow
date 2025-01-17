@@ -75,11 +75,11 @@ public class MainScreen extends ScreenUtil {
     }
 
     @Override
-    protected void createScreenContent(User user) {
+    protected void createScreenContent(Users user) {
         centralPanel.setLayout(new BorderLayout(10, 10));
         //CentralDatabase.getInstance().setCurrentUser(CentralDatabase.getInstance().FilterUser("dkkd3046@gmail.com"));
         if (CentralDatabase.getInstance().getCurrentUser() == null) {
-            new WelcomeScreen().showScreen();
+            new WelcomeScreen().showScreen(null);
             return;
         } else {
             // Tworzenie i dodawanie paneli
@@ -140,8 +140,8 @@ public class MainScreen extends ScreenUtil {
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
-                    WelcomeScreen screen = new WelcomeScreen();
-                    screen.showScreen();
+                    ScreenUtil screen = new WelcomeScreen();
+                    screen.showScreen(null);
 
                     CentralDatabase.getInstance().setCurrentUser(null);
 
@@ -688,7 +688,7 @@ public class MainScreen extends ScreenUtil {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             MainScreen mainScreen = new MainScreen();
-            mainScreen.showScreen();
+            mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser()==null? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
         });
     }
 

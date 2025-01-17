@@ -1,6 +1,7 @@
 package layout;
 
 import dataclass.user.User;
+import dataclass.user.Users;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,7 +22,7 @@ public class WelcomeScreen extends ScreenUtil implements Screen {
     }
 
     @Override
-    protected void createScreenContent(User user) {
+    protected void createScreenContent(Users user) {
         // Lewy panel - obraz
         leftPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
         leftPanel.setLayout(new BorderLayout(10, 10));
@@ -48,9 +49,9 @@ public class WelcomeScreen extends ScreenUtil implements Screen {
         sloganPanel.add(createLabel("Spiesz się, ktoś może Cię ubiec", 20));
         sloganPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        addListener(loginButton ,()-> SwingUtilities.invokeLater(() -> new LoginScreen().showScreen()));
-        addListener(registerPrivateButton ,()-> SwingUtilities.invokeLater(() -> new RegisterScreen().showScreen()));
-        addListener(registerBusinessButton ,()-> SwingUtilities.invokeLater(() -> new RegisterScreen().showScreen()));
+        addListener(loginButton ,() -> new LoginScreen().showScreen(null));
+        addListener(registerPrivateButton ,() -> new RegisterScreen().showScreen(Users.PRIVATE_CUSTOMER));
+        addListener(registerBusinessButton ,() -> new RegisterScreen().showScreen(Users.BUSINESS_CUSTOMER));
 
         choosePanel.add(loginButton);
         choosePanel.add(registerPrivateButton);
@@ -79,10 +80,11 @@ public class WelcomeScreen extends ScreenUtil implements Screen {
         });
     }
 
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            WelcomeScreen ws = new WelcomeScreen();
-            ws.showScreen();
+            ScreenUtil ws = new WelcomeScreen();
+            ws.showScreen(null);
         });
     }
 }
