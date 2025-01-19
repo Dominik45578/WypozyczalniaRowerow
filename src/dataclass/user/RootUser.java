@@ -1,7 +1,6 @@
 package dataclass.user;
 
 import dataclass.rental.RentalServices;
-import dataclass.rental.RentalSystemManager;
 import dataclass.rental.RentalTransaction;
 import dataclass.vehicle.Vehicle;
 import dataclass.vehicle.VehicleBrand;
@@ -21,12 +20,10 @@ public class RootUser  implements User {
     private String email;
     private String password;
     private  String id;
-    private final RentalSystemManager systemManager;
 
-    public RootUser(String id, RentalSystemManager systemManager) {
+    public RootUser(String id) {
         super();
         this.id = id;
-        this.systemManager = systemManager;
     }
 
     @Override
@@ -146,56 +143,4 @@ public class RootUser  implements User {
             this.password = password;
     }
 
-    /**
-     * Metoda dodaje nową markę pojazdu
-     *
-     * @param brandName the name of the brand to add.
-     */
-    public void addBrand(String brandName) {
-        systemManager.addBrand(brandName);
-    }
-
-    /**
-     * Metoda dodająca nowy model określonej marki
-     *
-     * @param brand     the brand to which the model will be added.
-     * @param modelName the name of the model to add.
-     */
-    public void addModel(VehicleBrand brand, String modelName) {
-        systemManager.addModel(brand, modelName);
-    }
-
-    /**
-     * Pobiera wszystkie dostępne marki
-     *
-     * @return a map of brand names to `VehicleBrand` objects.
-     */
-    public Map<String, VehicleBrand> getAllBrands() {
-        return systemManager.getAllBrands();
-    }
-
-    /**
-     * Pobiera wszystkie dostępne modele
-     *
-     * @return a map of brands to their respective models.
-     */
-    public Map<VehicleBrand, Map<String, VehicleModel>> getAllModels() {
-        return systemManager.getAllModels();
-    }
-
-    /**
-     * Dodanie nowego pojazdu do systemu
-     *
-     * @param vehicle the vehicle to add.
-     */
-    public void addVehicle(Vehicle vehicle) {
-        systemManager.addVehicle(vehicle);
-    }
-
-    /**
-     * Displays all data in the system (brands, models, and vehicles).
-     */
-    public void displayAllData() {
-        systemManager.displayAllData();
-    }
 }

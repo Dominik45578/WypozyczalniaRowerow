@@ -1,27 +1,23 @@
 package layout;
 
 import dataclass.fileoperations.CentralDatabase;
-import dataclass.fileoperations.FileDataManager;
-import dataclass.rental.RentalServices;
 import dataclass.rental.RentalTransaction;
 import dataclass.user.*;
-import dataclass.vehicle.Bike;
-import dataclass.vehicle.Vehicle;
+import dataclass.vehicle.*;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Map;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class MainScreen extends ScreenUtil {
     protected JPanel mainContentPanel;
@@ -35,6 +31,7 @@ public class MainScreen extends ScreenUtil {
     protected JLayeredPane layers;
     protected int lastElement;
     protected User customer;
+    public static MainScreen instance;
 
     protected enum MenuOptionPosition {
         HOMEPAGE(0),
@@ -57,21 +54,9 @@ public class MainScreen extends ScreenUtil {
 
     MainScreen() {
         super("Guckor Bike Rental - Login", 1400, 800);
+        instance = this;
         lastElement = -1;
-//        Customer c = new BusinessCustomer("BC001", "Dominik", "Michał", "Koralik", "0429265555",
-//                "31-866", "Kraków", "Skarżyńskiego 9", "dkkd3046@gmail.com", "Guckor", "BC001",
-//                "Warszawska 24", "31-234", "Kraków");
-//        CentralDatabase.getInstance().setCurrentUser(c);
         customer = CentralDatabase.getInstance().getCurrentUser();
-//         FileDataManager<Customer> customerManager = new FileDataManager<>("customer" , User.BUSINESS_C_PREFIX);
-//        try {
-//            CentralDatabase.getInstance().registerManager(Customer.class, customerManager);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        CentralDatabase.getInstance().addObject(Customer.class, c.getID(), c);
-//        RentalTransaction t = new RentalTransaction(new Bike("B001", "Default" , "Crtoss Hexagon 2" , false),c);
-//        c.getRentedHistory().put(t.getTransactionID(),t);
     }
 
     @Override
@@ -121,12 +106,15 @@ public class MainScreen extends ScreenUtil {
         upperPanel.add(notificationsPanel, BorderLayout.CENTER);
 
         // Informacje o kliencie
-        customerInfoPanel = createRoundedPanel(new Color(33, 42, 49));
+        customerInfoPanel = createRoundedPanel(Colors.DARK_BLUE.getColor());
+        customerInfoPanel.setAlignmentX(SwingUtilities.CENTER);
+        customerInfoPanel.setAlignmentY(SwingUtilities.CENTER);
+        customerInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         customerInfoPanel.setLayout(new BorderLayout());
         customerInfoPanel.setPreferredSize(new Dimension(400, 100));
-        JLabel customerLabel = createLabel(CentralDatabase.getInstance().getCurrentUser().getFirstName(), new Font("SansSerif", Font.PLAIN, 18), Color.WHITE);
+        JLabel customerLabel = createLabel("Cześć " + CentralDatabase.getInstance().getCurrentUser().getFirstName(), new Font("SansSerif", Font.PLAIN, 18), Color.WHITE);
         customerLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        customerInfoPanel.add(createLabel(CentralDatabase.getInstance().getCurrentUser().getID(), 20), BorderLayout.NORTH);
+        customerInfoPanel.add(createLabel(CentralDatabase.getInstance().getCurrentUser().getUserType().getType(), 20), BorderLayout.NORTH);
         customerInfoPanel.add(customerLabel, BorderLayout.CENTER);
         upperPanel.add(customerInfoPanel, BorderLayout.EAST);
         JButton logOut = createRoundedButton("<- Wyloguj się ", 20);
@@ -279,40 +267,84 @@ public class MainScreen extends ScreenUtil {
         updateLayerContent(statsPanel);
     }
 
+    private int currentPage = 0; // Numer aktualnej strony
+    private static final int TRANSACTIONS_PER_PAGE = 8; // Liczba transakcji na stronę
+
     public void createHistoryPanel() {
-        JPanel historyPanel = new JPanel();
-        historyPanel.setPreferredSize(layers.getPreferredSize());
-        historyPanel.setLayout(new GridLayout(30, 1, 10, 10));
+        // Główny panel z BorderLayout
+        JPanel historyPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        historyPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        historyPanel.setLayout(new BorderLayout(10, 10));
 
-        changeLastElement(MenuOptionPosition.HISTORY.getIndex());
+        // Pobieramy historię wypożyczeń użytkownika i sortujemy transakcje
+        Map<String, RentalTransaction> transactions = CentralDatabase.getInstance().getCurrentUser().getRentedHistory();
+        List<RentalTransaction> transactionList = new ArrayList<>(transactions.values());
 
-        // Pobieramy historię wypożyczeń użytkownika
-        Map<String , RentalTransaction>transactions = CentralDatabase.getInstance().getCurrentUser().getRentedHistory();
+        // Sortowanie: aktywne na początku
+        transactionList.sort((t1, t2) -> Boolean.compare(!t1.isActive(), !t2.isActive()));
 
-        // Iterujemy przez transakcje i wyświetlamy je w panelu
-        for (Map.Entry<String , RentalTransaction> entry: transactions.entrySet()){
-            RentalTransaction transaction = entry.getValue();
-            JPanel transactionPanel = new JPanel();
-            transactionPanel.setLayout(new GridLayout(1, 4));
+        int totalTransactions = transactionList.size();
+        int totalPages = (int) Math.ceil((double) totalTransactions / TRANSACTIONS_PER_PAGE); // Całkowita liczba stron
+        int startIndex = currentPageSearch * TRANSACTIONS_PER_PAGE; // Indeks początkowy dla bieżącej strony
+        int endIndex = Math.min(startIndex + TRANSACTIONS_PER_PAGE, totalTransactions); // Indeks końcowy
 
-            // Wyświetlanie danych w zależności od roli użytkownika
-            if (customer instanceof BusinessCustomer) {
-                JLabel usernameLabel = new JLabel(transaction.getUser().getFirstName());
-                transactionPanel.add(usernameLabel);
-            }
+        // Panel transakcji w centrum
+        JPanel transactionsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        transactionsPanel.setLayout(new GridLayout(4, 2, 10, 10)); // 4 rzędy, 2 kolumny
 
-            JLabel bikeBrandLabel = new JLabel(transaction.getVehicle().getVehicleModel());
-            transactionPanel.add(bikeBrandLabel);
-
-            JLabel startDateLabel = new JLabel(transaction.getRentalStart().toString());
-            transactionPanel.add(startDateLabel);
-
-            JLabel endDateLabel = new JLabel(transaction.getRentalEnd() != null ? transaction.getRentalEnd().toString() : "N/A");
-            transactionPanel.add(endDateLabel);
-
-            historyPanel.add(transactionPanel);
+        // Dodawanie transakcji do panelu
+        for (int i = startIndex; i < endIndex; i++) {
+            RentalTransaction transaction = transactionList.get(i);
+            JPanel transactionPanel = new TransactionField(transaction);
+            transactionsPanel.add(transactionPanel);
         }
+        historyPanel.add(transactionsPanel, BorderLayout.CENTER);
 
+        // Panel nawigacyjny na dole
+        JPanel navigationPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        navigationPanel.setLayout(new BorderLayout());
+
+        // Panel przycisków nawigacyjnych (po lewej stronie)
+        JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        buttonPanel.setOpaque(false);
+        JButton previousButton = createRoundedButton("<- Nowsze", 20);
+         previousButton.setVisible(false);
+        if (currentPageSearch > 0) {
+            previousButton.setVisible(true);
+
+            previousButton.addActionListener(e -> {
+                currentPageSearch--;
+                createHistoryPanel(); // Odtwarzanie panelu
+            });
+
+        }
+        buttonPanel.add(previousButton);
+        JButton nextButton = createRoundedButton("Poprzednie ->", 20);
+        nextButton.setVisible(false);
+        if (endIndex < totalTransactions) {
+            nextButton.setVisible(true);
+            nextButton.addActionListener(e -> {
+                currentPageSearch++;
+                createHistoryPanel(); // Odtwarzanie panelu
+            });
+
+        }
+         buttonPanel.add(nextButton);
+
+        navigationPanel.add(buttonPanel, BorderLayout.WEST);
+
+        // Wyświetlanie numeru strony po prawej stronie
+        JLabel pageLabel = new JLabel(String.format("Strona %d z %d", currentPageSearch + 1, totalPages));
+        pageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        pageLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        pageLabel.setForeground(Color.WHITE); // Ustaw kolor tekstu
+        navigationPanel.add(pageLabel, BorderLayout.EAST);
+
+        // Dodanie panelu nawigacyjnego do dolnej części głównego panelu
+        historyPanel.add(navigationPanel, BorderLayout.SOUTH);
+
+        // Aktualizacja warstwy
         updateLayerContent(historyPanel);
     }
 
@@ -480,203 +512,134 @@ public class MainScreen extends ScreenUtil {
         updateLayerContent(settingsPanel);
 
     }
-    private JPanel performSearch(String brand, String type, String electric, String status) {
-    // Dynamiczna liczba wierszy
+
+ private static final int VEHICLES_PER_PAGE = 7; // Liczba pojazdów na stronę
+private int currentPageSearch = 0; // Bieżąca strona
+
+public void createSearchPanel() {
+    // Główny panel z BorderLayout
+    mainContentPanel.removeAll();
+    mainContentPanel.setLayout(new BorderLayout(10, 10));
+
+    // Pasek wyszukiwania
+    JPanel filterPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+    filterPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
+
+    JTextField brandField = new JTextField(10);
+    JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Wszystko", "Rower", "Elektryczny", "Hulajnoga"});
+    JComboBox<String> electricComboBox = new JComboBox<>(new String[]{"Wszystko", "Elektryczny", "Nie elektryczny"});
+    JButton searchButton = createRoundedButton("Szukaj",20);
+
+    filterPanel.add(createLabel("Marka :",20));
+    filterPanel.add(brandField);
+    filterPanel.add(createLabel("Typ :",20));
+    filterPanel.add(typeComboBox);
+    filterPanel.add(createLabel("Elektryczny : ",20));
+    filterPanel.add(electricComboBox);
+    filterPanel.add(searchButton);
+
+    mainContentPanel.add(filterPanel, BorderLayout.NORTH);
+
+    // Panel na wyniki
+    JPanel resultsPanel = new JPanel();
+    resultsPanel.setLayout(new GridLayout(VEHICLES_PER_PAGE, 1, 10, 10));
+    resultsPanel.setBackground(Colors.BACKGROUND.getColor());
+    mainContentPanel.add(resultsPanel, BorderLayout.CENTER);
+
+    // Panel nawigacyjny na dole
+    JPanel navigationPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+    navigationPanel.setLayout(new BorderLayout(10, 0));
+
+    JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+    buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+
+    JLabel pageLabel = new JLabel(); // Numer strony
+    navigationPanel.add(buttonPanel, BorderLayout.WEST);
+    navigationPanel.add(pageLabel, BorderLayout.EAST);
+
+    mainContentPanel.add(navigationPanel, BorderLayout.SOUTH);
+
+    // Domyślne ładowanie wszystkich dostępnych pojazdów
+    searchButton.addActionListener(e -> performSearchAndUpdate(brandField.getText(),
+            (String) typeComboBox.getSelectedItem(),
+            (String) electricComboBox.getSelectedItem()));
+
+    // Wyświetlenie domyślnych danych (wszystkie dostępne pojazdy)
+    performSearchAndUpdate("", "Wszystko", "Wszystko");
+
+    updateLayerContent(mainContentPanel);
+}
+
+private void performSearchAndUpdate(String brand, String type, String electric) {
+    // Pobieranie danych z bazy
     @SuppressWarnings("unchecked")
     Map<String, Vehicle> vehicleMap = (Map<String, Vehicle>) CentralDatabase.getInstance().getCachedData().get(Vehicle.class);
 
-    List<Vehicle> filteredVehicles = new ArrayList<>();
+    // Filtrowanie wyników
+    List<Vehicle> filteredVehicles = vehicleMap.values().stream()
+            .filter(vehicle -> vehicle != null && !vehicle.isRented()) // Domyślnie tylko dostępne
+            .filter(vehicle -> brand.isEmpty() || vehicle.getVehicleModel().toLowerCase().contains(brand.toLowerCase()))
+            .filter(vehicle -> type.equals("Wszystko") || vehicle.getVehicleType().equalsIgnoreCase(type))
+            .filter(vehicle -> electric.equals("Wszystko") ||
+                    (electric.equals("Elektryczny") && vehicle.isElectric()) ||
+                    (electric.equals("Nie elektryczny") && !vehicle.isElectric()))
+            .collect(Collectors.toList());
 
-    for (Map.Entry<String, Vehicle> entry : vehicleMap.entrySet()) {
-        Vehicle vehicle = entry.getValue();
-        if (vehicle == null) continue;
-
-        boolean matches = true;
-
-        // Filtruj po marce
-        if (!brand.isEmpty() && !vehicle.getVehicleModel().toLowerCase().contains(brand.toLowerCase())) {
-            matches = false;
-        }
-
-        // Filtruj po typie pojazdu
-        if (!type.equals("Wszystko") && !vehicle.getVehicleType().contains(type)) {
-            matches = false;
-        }
-
-        // Filtruj po elektryczności
-        if (electric.equals("Elektryczny") && !vehicle.isElectric()) {
-            matches = false;
-        } else if (electric.equals("Nie elektryczny") && vehicle.isElectric()) {
-            matches = false;
-        }
-
-        // Filtruj po statusie (wolny/zajęty)
-        if (status.equals("Zajęty") && !vehicle.isRented()) {
-            matches = false;
-        } else if (status.equals("Wolny") && vehicle.isRented()) {
-            matches = false;
-        }
-
-        if (matches) {
-            filteredVehicles.add(vehicle);
-        }
-    }
-
-    // Przeładuj wyniki wyszukiwania
-      return updateVehicleContentPanel(filteredVehicles);
-
+    // Aktualizacja panelu wyszukiwania
+    updateSearchPanel(filteredVehicles);
 }
 
-    private JPanel updateVehicleContentPanel(List<Vehicle> filteredVehicles) {
-        JPanel vehicleContent = new JPanel();
-        vehicleContent.setLayout(new BoxLayout(vehicleContent, BoxLayout.Y_AXIS));
-        vehicleContent.setBackground(Colors.BACKGROUND.getColor());
+private void updateSearchPanel(List<Vehicle> filteredVehicles) {
+    JPanel resultsPanel = (JPanel) ((BorderLayout) mainContentPanel.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+    JPanel navigationPanel = (JPanel) ((BorderLayout) mainContentPanel.getLayout()).getLayoutComponent(BorderLayout.SOUTH);
 
-        for (Vehicle vehicle : filteredVehicles) {
-            ContentPanel contentPanel = new ContentPanel(vehicle);
+    resultsPanel.removeAll();
 
-            // Ustawianie preferowanego rozmiaru na podstawie długości obiektu
-            int preferredWidth = layers.getPreferredSize().width - 20;
-            contentPanel.setPreferredSize(new Dimension(preferredWidth, 90));
+    // Wyświetlanie wyników dla bieżącej strony
+    int totalVehicles = filteredVehicles.size();
+    int totalPages = (int) Math.ceil((double) totalVehicles / VEHICLES_PER_PAGE);
+    int startIndex = currentPageSearch * VEHICLES_PER_PAGE;
+    int endIndex = Math.min(startIndex + VEHICLES_PER_PAGE, totalVehicles);
 
-            // Dodaj ContentPanel do vehicleContent
-            vehicleContent.add(contentPanel);
-
-            // Dodaj przerwę między panelami
-            vehicleContent.add(Box.createVerticalStrut(10));
-        }
-
-       return vehicleContent;
+    for (int i = startIndex; i < endIndex; i++) {
+        Vehicle vehicle = filteredVehicles.get(i);
+        ContentPanel contentPanel = new ContentPanel(vehicle);
+        resultsPanel.add(contentPanel);
     }
 
-    public void createSearchPanel() {
-        // Panel z główną zawartością
-        mainContentPanel.removeAll();
+    // Aktualizacja przycisków nawigacyjnych
+    JPanel buttonPanel = (JPanel) ((BorderLayout) navigationPanel.getLayout()).getLayoutComponent(BorderLayout.WEST);
+    JLabel pageLabel = (JLabel) ((BorderLayout) navigationPanel.getLayout()).getLayoutComponent(BorderLayout.EAST);
 
-        // Panel na belkę wyszukiwania
-        JPanel searchPanel = new JPanel();
-        searchPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(Colors.BACKGROUND.getColor());
-        searchPanel.setForeground(Color.WHITE);
+    buttonPanel.removeAll();
 
-        // Pole tekstowe do wyszukiwania po marce
-        JTextField brandField = new JTextField(10);
-        searchPanel.add(new JLabel("Marka:"));
-        searchPanel.add(brandField);
-
-        // Lista rozwijana do wyboru typu pojazdu (Bike, Ebike, Scooter)
-        JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Wszystko", "Rower", "elek", "Hulajnoga"});
-        searchPanel.add(new JLabel("Typ:"));
-        searchPanel.add(typeComboBox);
-
-        // Lista rozwijana do wyboru statusu (Elektryczny)
-        JComboBox<String> electricComboBox = new JComboBox<>(new String[]{"Wszystko", "Elektryczny", "Nie elektryczny"});
-        searchPanel.add(new JLabel("Elektryczny:"));
-        searchPanel.add(electricComboBox);
-
-        // Lista rozwijana do wyboru statusu (Zajęty/Wolny)
-        JComboBox<String> statusComboBox = new JComboBox<>(new String[]{"Wszystko", "Zajęty", "Wolny"});
-        searchPanel.add(new JLabel("Status:"));
-        searchPanel.add(statusComboBox);
-
-        // Przycisk do uruchamiania wyszukiwania
-        JPanel vehicleContent = new JPanel();
-        vehicleContent.setLayout(new BoxLayout(vehicleContent, BoxLayout.Y_AXIS));
-        vehicleContent.setBackground(Colors.BACKGROUND.getColor());
-        JButton searchButton = new JButton("Szukaj");
-        searchButton.addActionListener(e -> performSearch(brandField.getText(),
-                (String) typeComboBox.getSelectedItem(),
-                (String) electricComboBox.getSelectedItem(),
-                (String) statusComboBox.getSelectedItem()));
-        searchPanel.add(searchButton);
-
-        // Dodaj belkę wyszukiwania do głównego panelu
-        mainContentPanel.add(searchPanel, BorderLayout.NORTH);
-
-        // Panel na wyniki wyszukiwania
-
-
-        // Dynamiczna liczba wierszy
-        @SuppressWarnings("unchecked")
-        Map<String, Vehicle> vehicleMap = (Map<String, Vehicle>) CentralDatabase.getInstance().getCachedData().get(Vehicle.class);
-
-        // Dodaj panel z wynikami
-        for (Map.Entry<String, Vehicle> entry : vehicleMap.entrySet()) {
-            if (entry.getValue() != null) {
-                ContentPanel contentPanel = new ContentPanel(entry.getValue());
-
-                // Ustawianie preferowanego rozmiaru na podstawie długości obiektu
-                int preferredWidth = layers.getPreferredSize().width - 20;
-                contentPanel.setPreferredSize(new Dimension(preferredWidth, contentPanel.getPreferredSize().height));
-
-                // Dodaj ContentPanel do vehicleContent
-                vehicleContent.add(contentPanel);
-
-                // Dodaj przerwę między panelami
-                vehicleContent.add(Box.createVerticalStrut(10));
-            }
-        }
-
-        // Dodaj vehicleContent do mainContentPanel
-        mainContentPanel.add(vehicleContent);
-
-        // Uaktualnij widok po dodaniu nowych elementów
-        mainContentPanel.revalidate();
-        mainContentPanel.repaint();
-
-        // Ustawienie JScrollPane
-        JScrollPane vehicleScrollPanel = new JScrollPane(vehicleContent) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                // Rysowanie zaokrąglonego prostokąta
-                g2d.setColor(getBackground());
-                g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-            }
-        };
-        vehicleScrollPanel.setOpaque(false);
-        vehicleScrollPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        vehicleScrollPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        vehicleScrollPanel.setBackground(Colors.DARK_BLUE.getColor());
-        vehicleScrollPanel.setBorder(null);
-
-        JScrollBar verticalScrollBar = vehicleScrollPanel.getVerticalScrollBar();
-        verticalScrollBar.setBackground(Colors.BACKGROUND.getColor());
-        verticalScrollBar.setForeground(Colors.DARK_BLUE.getColor());
-        verticalScrollBar.setUnitIncrement(20);
-        verticalScrollBar.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
-        verticalScrollBar.setUI(new BasicScrollBarUI() {
-            @Override
-            protected void configureScrollBarColors() {
-                this.thumbColor = Colors.DARK_BLUE.getColor(); // Kolor suwaka
-            }
-
-            @Override
-            protected JButton createDecreaseButton(int orientation) {
-                JButton button = super.createDecreaseButton(orientation);
-                button.setPreferredSize(new Dimension(0, 0)); // Usuwa przyciski góra/dół
-                button.setVisible(false);
-                return button;
-            }
-
-            @Override
-            protected JButton createIncreaseButton(int orientation) {
-                JButton button = super.createIncreaseButton(orientation);
-                button.setPreferredSize(new Dimension(0, 0)); // Usuwa przyciski góra/dół
-                button.setVisible(false);
-                return button;
-            }
+    if (currentPageSearch > 0) {
+        JButton previousButton = createRoundedButton("< - Poprzednie",20);
+        previousButton.addActionListener(e -> {
+            currentPageSearch--;
+            updateSearchPanel(filteredVehicles);
         });
-
-        // Dodanie JScrollPane do mainContentPanel
-        mainContentPanel.add(vehicleScrollPanel, BorderLayout.CENTER);
-
-        // Aktualizacja zawartości warstwy
-        updateLayerContent(mainContentPanel);
+        buttonPanel.add(previousButton);
     }
+
+    if (endIndex < totalVehicles) {
+        JButton nextButton = createRoundedButton("Następne -> ",20);
+        nextButton.addActionListener(e -> {
+            currentPageSearch++;
+            updateSearchPanel(filteredVehicles);
+        });
+        buttonPanel.add(nextButton);
+    }
+
+    // Aktualizacja numeru strony
+    pageLabel.setText(String.format("Strona %d z %d", currentPageSearch + 1, totalPages));
+
+    resultsPanel.revalidate();
+    resultsPanel.repaint();
+    navigationPanel.revalidate();
+    navigationPanel.repaint();
+}
+
 
     public void createStatsPanel() {
         JPanel statsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
@@ -685,12 +648,6 @@ public class MainScreen extends ScreenUtil {
         updateLayerContent(statsPanel);
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            MainScreen mainScreen = new MainScreen();
-            mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser()==null? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
-        });
-    }
 
     public void changeLastElement(int newElement) {
         if (lastElement == -1 || lastElement == newElement) {
@@ -856,5 +813,15 @@ public class MainScreen extends ScreenUtil {
         });
     }
 
+    public static void main(String[] args) {
+        Vehicle b = new Bike(CentralDatabase.getInstance().getNextID(Vehicle.class, SingleTrackVehicle.STV_BIKE_PREFIX), "Rower szosowy", "Glowrer", false);
+        Vehicle eb = new EBike(CentralDatabase.getInstance().getNextID(Vehicle.class, SingleTrackVehicle.STV_E_BIKE_PREFIX), "Rower elektryczny", "Kross", 99);
+        CentralDatabase.getInstance().addObject(Vehicle.class, b.getVehicleId(), b);
+        CentralDatabase.getInstance().addObject(Vehicle.class, eb.getVehicleId(), eb);
+        SwingUtilities.invokeLater(() -> {
+            MainScreen mainScreen = new MainScreen();
+            mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser() == null ? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
+        });
+    }
 
 }

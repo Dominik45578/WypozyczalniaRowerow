@@ -1,5 +1,6 @@
 package dataclass.fileoperations;
 
+import dataclass.rental.RentalTransaction;
 import dataclass.user.User;
 import dataclass.vehicle.SingleTrackVehicle;
 import dataclass.vehicle.Vehicle;
@@ -37,13 +38,12 @@ public class CentralDatabase {
     }
 
     public void setCurrentUser(User currentUser) {
-        if(currentUser == null){
+        if (currentUser == null) {
             this.currentUser = null;
-        }
-        else{
-            try{
+        } else {
+            try {
                 updateUser(User.class, currentUser);
-            }catch (Exception e){
+            } catch (Exception e) {
                 System.out.println("Użytkownicy są różni");
             }
             this.currentUser = currentUser;
@@ -75,10 +75,13 @@ public class CentralDatabase {
             FileDataManager<Vehicle> vehicleManager = new FileDataManager<>("Vehicle", vehiclePrefixes);
             registerManager(Vehicle.class, vehicleManager);
 
-            Set<String> brands= Set.of("VB");
+            Set<String> brands = Set.of("VB");
             FileDataManager<VehicleBrand> vehicleBrand = new FileDataManager<>("Brand", brands);
             registerManager(VehicleBrand.class, vehicleBrand);
 
+            Set<String> transactions= Set.of("T");
+            FileDataManager<RentalTransaction>  rentalTransactionFileDataManager = new FileDataManager<>("Transactions", transactions);
+            registerManager(RentalTransaction.class, rentalTransactionFileDataManager);
         } catch (IOException e) {
             System.err.println("Error creating default managers: " + e.getMessage());
         }
@@ -137,6 +140,12 @@ public class CentralDatabase {
         }
         // Ensure that we add the object as the base type (T), even if it's a subclass
         data.put(id, type.cast(object)); // Cast the object to T safely
+        try {
+            System.out.println("Zapis :" + id + " Obiekt :" + object.getClass().getName());
+            save(type,id);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public <T extends Serializable> T getObject(Class<T> type, String id) {
@@ -240,6 +249,7 @@ public class CentralDatabase {
 
     }
 
+    @Deprecated
     public boolean emailExists(String email) {
         for (Map.Entry<Class<?>, Map<String, ?>> entry : cachedData.entrySet()) {
             if (User.class.isAssignableFrom(entry.getKey())) {
@@ -261,6 +271,7 @@ public class CentralDatabase {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
+    @Deprecated
     public User FilterUser(String email) {
         if (emailExists(email)) {
             Map<String, User> map = FilterObject(User.class,
@@ -284,33 +295,33 @@ public class CentralDatabase {
                 .anyMatch(predicate);
     }
 
-  public boolean updateUser(Class<User> type, User updatedObject) {
-    // Sprawdzamy, czy mamy dane dla danego typu
-    @SuppressWarnings("unchecked")
-    Map<String, User> data = (Map<String, User>) cachedData.get(type);
+    public boolean updateUser(Class<User> type, User updatedObject) {
+        // Sprawdzamy, czy mamy dane dla danego typu
+        @SuppressWarnings("unchecked")
+        Map<String, User> data = (Map<String, User>) cachedData.get(type);
 
-    if (data == null) {
-        throw new IllegalArgumentException("No manager registered for type: " + type.getName());
+        if (data == null) {
+            throw new IllegalArgumentException("No manager registered for type: " + type.getName());
+        }
+
+        // Wyszukujemy klucz na podstawie ID obiektu
+        String objectKey = data.entrySet().stream()
+                .filter(entry -> entry.getValue().getID().equals(updatedObject.getID()))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Object not found in the database."));
+
+        // Aktualizujemy obiekt w mapie
+        data.put(objectKey, updatedObject);
+
+        // Zapisujemy zmiany do menedżera plików
+        try {
+            save(type, objectKey);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to save updated object: " + e.getMessage(), e);
+        }
+        return false;
     }
-
-    // Wyszukujemy klucz na podstawie ID obiektu
-    String objectKey = data.entrySet().stream()
-            .filter(entry -> entry.getValue().getID().equals(updatedObject.getID()))
-            .map(Map.Entry::getKey)
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Object not found in the database."));
-
-    // Aktualizujemy obiekt w mapie
-    data.put(objectKey, updatedObject);
-
-    // Zapisujemy zmiany do menedżera plików
-    try {
-        save(type, objectKey);
-    } catch (IOException e) {
-        throw new RuntimeException("Failed to save updated object: " + e.getMessage(), e);
-    }
-    return false;
-}
 
 
 /*

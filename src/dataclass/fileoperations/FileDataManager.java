@@ -69,7 +69,6 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
     public void save(String id, T item) throws IOException {
         String fileName = getFileName(id);
         Path filePath = Paths.get(folderPath, fileName);
-        System.out.println(delete(id));
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(item);
         }
