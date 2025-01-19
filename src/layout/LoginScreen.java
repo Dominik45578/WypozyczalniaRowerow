@@ -4,6 +4,7 @@ import dataclass.fileoperations.CentralDatabase;
 import dataclass.fileoperations.CheckData;
 import dataclass.user.Customer;
 import dataclass.user.User;
+import dataclass.user.Users;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +19,7 @@ public class LoginScreen extends ScreenUtil {
     }
 
     @Override
-    protected void createScreenContent(User user) {
+    protected void createScreenContent(Users user) {
         // Ustawienie układu centralnego panelu
          centralPanel.setLayout(new BorderLayout(10, 10)); // 2 kolumny: lewa i prawa
         formPanel = new JPanel(new GridLayout(1,2,10,10));
@@ -61,7 +62,7 @@ public class LoginScreen extends ScreenUtil {
                 if(searchUser.getPassword().equals(passwordField.getValue())){
                     JOptionPane.showMessageDialog(rightPanel, "Logowanie...");
                     CentralDatabase.getInstance().setCurrentUser(CentralDatabase.getInstance().FilterUser(emailField.getValue()));
-                    new MainScreen().showScreen();
+                    new MainScreen().showScreen(searchUser.getUserType());
                 }
                 else{
                     passwordField.getTextField().setForeground(Color.RED);
@@ -90,7 +91,7 @@ public class LoginScreen extends ScreenUtil {
         JLabel titleLabel = createLabel("Logowanie użytkownika", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         JButton backButton = createRoundedButton("< Wróć" , 20);
-        addListener(backButton, () -> SwingUtilities.invokeLater(() -> new WelcomeScreen().showScreen()));
+        addListener(backButton, () -> SwingUtilities.invokeLater(() -> new WelcomeScreen().showScreen(CentralDatabase.getInstance().getCurrentUser()==null? null : CentralDatabase.getInstance().getCurrentUser().getUserType())));
         upperContentPanel.add(backButton, BorderLayout.WEST);
         upperContentPanel.add(titleLabel, BorderLayout.CENTER);
 
@@ -110,7 +111,7 @@ public class LoginScreen extends ScreenUtil {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             LoginScreen loginScreen = new LoginScreen();
-            loginScreen.showScreen();
+            loginScreen.showScreen(null);
         });
     }
 }

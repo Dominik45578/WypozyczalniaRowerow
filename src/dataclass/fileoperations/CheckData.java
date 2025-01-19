@@ -150,5 +150,8 @@ public class CheckData {
         }
         return Pattern.matches("[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]*", name);
     }
+    public static boolean isValidNIP(String nip) {
+        return nip != null && nip.matches("\\d{10}");
+    }
 }
 

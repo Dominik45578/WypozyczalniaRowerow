@@ -17,19 +17,50 @@ public class BusinessCustomer extends Customer implements User {
     private String companyCity;
     private String companyPhoneNumber;
     private String companyEmail;
+    private String nipNumber;
     private Map<String, Employee> employees = new HashMap<>();
 
+    public BusinessCustomer(Customer customer, String companyName, String companyId, String companyAddress, String companyPostalCode,
+                            String companyCity,String companyPhoneNumber, String companyEmail, String nipnumber) {
+        this.customerId = customer.customerId;
+        this.firstName = customer.firstName;
+        this.secondName = customer.secondName;
+        this.lastName = customer.lastName;
+        this.pesel = customer.pesel;
+        this.address = customer.address;
+        this.postalCode = customer.postalCode;
+        this.city = customer.city;
+        this.email = customer.email;
+        this.password = customer.password;
+        numberOfRentedItems = 0;
+        this.phoneNumber = "Brak";
+
+        this.companyName = companyName;
+        this.companyId = companyId;
+        this.companyAddress = companyAddress;
+        this.companyCity = companyCity;
+        this.companyPostalCode = companyPostalCode;
+        this.nipNumber = nipnumber;
+        this.companyPhoneNumber = companyPhoneNumber;
+        this.companyEmail = companyEmail;
+    }
+
     public BusinessCustomer(String customerId, String firstName, String secondName, String lastName,
-                            String pesel, String postalCode, String city, String address,String email,
-                            String companyName, String companyId, String companyAddress, String companyPostalCode, String companyCity, String password) {
+                            String pesel, String postalCode, String city, String address, String email,
+                            String companyName, String companyId, String companyAddress, String companyPostalCode, String companyCity, String companyPhoneNumber, String companyEmail, String password, String nipnumber) {
         super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
         this.companyName = companyName;
         this.companyId = companyId;
         this.companyAddress = companyAddress;
         this.companyCity = companyCity;
-        this.companyPostalCode= companyPostalCode;
-        this.companyPhoneNumber = "Brak";
-        this.companyEmail = "Brak";
+        this.companyPostalCode = companyPostalCode;
+        this.nipNumber = nipnumber;
+        this.companyPhoneNumber = companyPhoneNumber;
+        this.companyEmail = companyEmail;
+    }
+
+    public String getNipNumber() {
+        return nipNumber;
     }
 
     public void addEmployee(String employeeId, Employee employee) {
@@ -101,7 +132,7 @@ public class BusinessCustomer extends Customer implements User {
         this.companyCity = companyCity;
     }
 
-    public int getNumberOfEmployees(){
+    public int getNumberOfEmployees() {
         return employees.size();
     }
 

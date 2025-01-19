@@ -134,7 +134,7 @@ public abstract class Customer implements User, Serializable {
 
     @Override
     public int getNumberOfRentedItems() {
-        return numberOfRentedItems;
+        return rentedItems.keySet().size();
     }
 
     @Override
@@ -179,7 +179,8 @@ public abstract class Customer implements User, Serializable {
 
     @Override
     public void returnItem(String itemId) {
-
+        rentedItems.remove(itemId);
+        rentedHistory.get(itemId).endRental();
     }
 
     @Override

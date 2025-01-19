@@ -6,8 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class EditableField extends ContentField {
-    private JTextField textField;
-    private JButton editButton;
+    protected JTextField textField;
+    protected JButton editButton;
 
     public EditableField(String fieldName, String initialValue) {
         super(fieldName , Colors.DARK_BLUE_ACTIVE.getColor(), new Dimension(300, 150));
