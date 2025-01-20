@@ -1,65 +1,96 @@
 package layout;
 
-import dataclass.vehicle.Scooter;
+import dataclass.fileoperations.CentralDatabase;
+import dataclass.rental.RentalServices;
 import dataclass.vehicle.SingleTrackVehicle;
+import dataclass.vehicle.Vehicle;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ContentPanel extends JPanel implements Screen {
     JLabel typeLabel;
+    JLabel idLabel;
     JLabel brandLabel;
     JLabel isRentedLabel;
     JPanel batteryLevelPanel;
     SingleTrackVehicle vehicle;
-    JButton rentButon;
+    JButton rentButton;
 
-    public ContentPanel(int value) {
-        vehicle = new Scooter(value);
-        this.setOpaque(false); // Ustawienie przezroczystości, aby zaokrąglone rogi były widoczne
-        this.setBackground(Colors.DARK_BLUE.getColor());
+    public ContentPanel(Vehicle vehicle) {
+        this.vehicle = (SingleTrackVehicle) vehicle;
+        this.setOpaque(false);
+        this.setBackground(Colors.DARK_BLUE_ACTIVE.getColor());
         this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        this.setLayout(new GridLayout(1, 5, 10, 10));
+        this.setLayout(new GridLayout(1, 6, 10, 10));
+        this.setPreferredSize(new Dimension(0, 80));
 
-        if (!vehicle.isElectric()) {
-            batteryLevelPanel = null;
-        } else {
+        isRentedLabel = createLabel("", 18);
+        brandLabel = createLabel("", 18);
+        typeLabel = createLabel("", 18);
+        idLabel = createLabel("", 18);
+
+        if (vehicle.isElectric()) {
             batteryLevelPanel = createRoundedPanel(Colors.DARK_BLUE.getColor());
             batteryLevelPanel.setLayout(new BorderLayout(10, 10));
-            createBarPanel();
+        } else {
+            batteryLevelPanel = null;
         }
 
-        isRentedLabel = createLabel(vehicle.isRented() ? "Zajęty" : "Wolny", 20);
-        brandLabel = createLabel(vehicle.getVehicleModel(), 20);
-        typeLabel = createLabel(vehicle.getClass().getSimpleName(), 20); // Użycie getSimpleName dla czytelności
-
+        rentButton = createRoundedButton("Wypożycz", Colors.DARK_BLUE_HOVER.getColor(), Color.WHITE, new Font("San-Sferis", Font.BOLD, 20));
+        this.add(idLabel);
         this.add(typeLabel);
         this.add(brandLabel);
         this.add(isRentedLabel);
         if (batteryLevelPanel != null) {
             this.add(batteryLevelPanel);
         }
-        rentButon = createButton("Wypożycz", Color.BLACK, Color.WHITE, new Font("San-Sferis", Font.BOLD, 20));
-        this.add(rentButon);
-        if(vehicle.isRented()){
-            rentButon.setVisible(false);
+        this.add(rentButton);
+
+        setupButtonActions();
+        updateContent();
+    }
+
+    private void setupButtonActions() {
+        rentButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!vehicle.isRented()) {
+                    RentalServices.getInstance().rentVehicle(vehicle.getVehicleId(), CentralDatabase.getInstance().getCurrentUser());
+                    rentButton.setVisible(false);
+                    updateContent();
+                     MainScreen.instance.createSearchPanel();
+                }
+            }
+        });
+    }
+
+    public void updateContent() {
+        // Aktualizacja etykiet
+        idLabel.setText(vehicle.getVehicleId());
+        isRentedLabel.setText(vehicle.isRented() ? "Zajęty" : "Wolny");
+        brandLabel.setText(vehicle.getVehicleModel());
+        typeLabel.setText(vehicle.getClass().getSimpleName());
+
+        // Aktualizacja przycisku
+        if (vehicle.isRented()) {
+            rentButton.setVisible(false);
+        } else {
+            rentButton.setText("Wypożycz");
+            rentButton.setVisible(true);
         }
-    }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        // Aktualizacja panelu baterii
+        if (batteryLevelPanel != null) {
+            batteryLevelPanel.removeAll();
+            createBarPanel();
+        }
 
-        // Rysowanie zaokrąglonego prostokąta
-        g2d.setColor(getBackground());
-        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
-    }
-
-    @Override
-    public boolean isOpaque() {
-        return false; // Panel nie jest całkowicie kryjący, aby widoczne były zaokrąglone rogi
+        // Przeładowanie widoku
+        revalidate();
+        repaint();
     }
 
     private void setBatteryBar(JProgressBar batteryLevelBar) {
@@ -81,7 +112,6 @@ public class ContentPanel extends JPanel implements Screen {
         JProgressBar batteryLevelBar = new JProgressBar(0, 100);
         batteryLevelBar.setPreferredSize(new Dimension(100, 10));
         batteryLevelBar.setBorderPainted(false);
-       // batteryLevelBar.setBorder(BorderFactory.createLineBorder(Color.WHITE,1));
         batteryLevelBar.setBackground(Colors.BACKGROUND.getColor());
         setBatteryBar(batteryLevelBar);
 
@@ -90,5 +120,15 @@ public class ContentPanel extends JPanel implements Screen {
         batteryLevelPanel.add(batteryLevelLabel, BorderLayout.WEST);
     }
 
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g.create();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setColor(Colors.DARK_BLUE_ACTIVE.getColor());
+        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+        super.paintComponent(g);
+        g2d.dispose();
+    }
 
 }
+

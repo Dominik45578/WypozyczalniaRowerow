@@ -45,7 +45,6 @@ public interface User extends Serializable {
     void setRentedHistory(Map<String, RentalTransaction> rentedHistory);
 
     String getID();
-
     void setID(String id);
 
     void rentItem(String itemId, Vehicle vehicle);
@@ -55,4 +54,7 @@ public interface User extends Serializable {
     void removeRentedItem(String itemId);
 
     Users getUserType();
+
+    String getPassword();
+    void setPassword(String password);
 }

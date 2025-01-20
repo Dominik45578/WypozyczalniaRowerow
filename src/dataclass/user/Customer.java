@@ -20,17 +20,18 @@ public abstract class Customer implements User, Serializable {
     protected int numberOfRentedItems;
     protected String email;
     protected String phoneNumber;
+    protected String password;
     protected Map<String, Vehicle> rentedItems = new HashMap<>();
     protected Map<String, RentalTransaction> rentedHistory = new HashMap<>();
 
     public Customer() {
         this("C000", "Dominik", "Michał", "Koralik", "0429265555",
-                "31-866", "Kraków", "Skarżyńskiego 9", "dkkd3046@gmail.com");
+                "31-866", "Kraków", "Skarżyńskiego 9", "dkkd3046@gmail.com","Dominik456");
     }
 
     public Customer(String customerId, String firstName, String secondName,
                     String lastName, String pesel, String postalCode, String city,
-                    String address, String email) {
+                    String address, String email, String password) {
         this.secondName = secondName;
         this.customerId = customerId;
         this.pesel = pesel;
@@ -40,6 +41,7 @@ public abstract class Customer implements User, Serializable {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
+        this.password = password;
         numberOfRentedItems = 0;
         this.phoneNumber = "Brak";
     }
@@ -50,6 +52,15 @@ public abstract class Customer implements User, Serializable {
         return pesel;
     }
 
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
+    @Override
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     public void setPesel(String pesel) {
         this.pesel = pesel;
@@ -123,7 +134,7 @@ public abstract class Customer implements User, Serializable {
 
     @Override
     public int getNumberOfRentedItems() {
-        return numberOfRentedItems;
+        return rentedItems.keySet().size();
     }
 
     @Override
@@ -142,7 +153,9 @@ public abstract class Customer implements User, Serializable {
     }
 
     @Override
-    public Map<String, Vehicle> getRentedItems() { return rentedItems; }
+    public Map<String, Vehicle> getRentedItems() {
+        return rentedItems;
+    }
 
     @Override
     public void setRentedItems(Map<String, Vehicle> rentedItems) {
@@ -166,11 +179,17 @@ public abstract class Customer implements User, Serializable {
 
     @Override
     public void returnItem(String itemId) {
-
+        rentedItems.remove(itemId);
+        rentedHistory.get(itemId).endRental();
     }
 
     @Override
     public void removeRentedItem(String itemId) {
 
+    }
+
+    @Override
+    public String toString() {
+        return email + " " + firstName;
     }
 }

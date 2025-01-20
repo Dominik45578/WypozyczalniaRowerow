@@ -39,14 +39,14 @@ public interface Screen {
 default JButton createRoundedButton(String text , int size){
        return createRoundedButton(text, Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE, new Font("SansSerif", Font.PLAIN, size));
 }
-default JButton createRoundedButton(String text, Color background, Color foreground, Font font) {
+ default JButton createRoundedButton(String text, Color background, Color foreground, Font font) {
     JButton button = new JButton(text) {
         @Override
         protected void paintComponent(Graphics g) {
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Narysowanie zaokrąglonego tła
+            // Rysowanie zaokrąglonego tła
             g2d.setColor(background);
             g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
 
@@ -81,6 +81,7 @@ default JButton createRoundedButton(String text, Color background, Color foregro
     return button;
 }
 
+
     default JButton createButton(String text, Color background, Color foreground, Font font) {
         JButton button = new JButton(text);
         button.setBackground(background);
@@ -96,8 +97,9 @@ default JButton createRoundedButton(String text, Color background, Color foregro
         label.setForeground(color);
         return label;
     }
-    default JLabel createLabel(String text , int size) {
-        JLabel label =createLabel(text, new Font("SansSerif", Font.PLAIN, size), Color.WHITE);
+
+    default JLabel createLabel(String text, int size) {
+        JLabel label = createLabel(text, new Font("SansSerif", Font.PLAIN, size), Color.WHITE);
         return label;
     }
 
@@ -107,7 +109,7 @@ default JButton createRoundedButton(String text, Color background, Color foregro
         return textField;
     }
 
-    default JCheckBox createCheckBox(String text, Color background, Color Foreground,Font font) {
+    default JCheckBox createCheckBox(String text, Color background, Color Foreground, Font font) {
         JCheckBox checkBox = new JCheckBox(text);
         checkBox.setBackground(background);
         checkBox.setFont(font);
@@ -116,7 +118,7 @@ default JButton createRoundedButton(String text, Color background, Color foregro
     }
 
     default JPanel createFormWrapper(String title , String label){
-        return createFormWrapper(title);
+       return createFormWrapper(title);
     }
     default JPanel createFormWrapper(String title) {
         JPanel formWrapper = createRoundedPanel(new Color(85, 84, 84));//new Color(218, 237, 248));
@@ -129,7 +131,7 @@ default JButton createRoundedButton(String text, Color background, Color foregro
         JTextField formTextField = new JTextField();
         formTextField.setFont(new Font("SansSerif", Font.PLAIN, 20));
         formTextField.setBackground(new Color(97, 97, 97));
-        formTextField.setMargin(new Insets(0,20,0,20));
+        formTextField.setMargin(new Insets(0, 20, 0, 20));
         formTextField.setBorder(null);
         formTextField.setCaretColor(Color.WHITE);
         formTextField.setForeground(Color.WHITE);

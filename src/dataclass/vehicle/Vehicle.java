@@ -8,13 +8,14 @@ import java.io.Serializable;
 /**
  * Interface representing a generic Vehicle.
  */
-public interface Vehicle extends Serializable{
+public interface Vehicle extends Serializable {
 
     String getStatus();
 
     void setStatus(String status);
 
     boolean isRented();
+
 
     User getRenter();
 
@@ -28,11 +29,11 @@ public interface Vehicle extends Serializable{
 
     String getVehicleModel();
 
-    default boolean isElectric(){
+    default boolean isElectric() {
         return false;
     }
 
-    default int getBatteryLevel(){
+    default int getBatteryLevel() {
         return -1;
     }
 

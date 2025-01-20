@@ -6,8 +6,8 @@ import javax.swing.*;
 import java.awt.*;
 
 public class EditableField extends ContentField {
-    private JTextField textField;
-    private JButton editButton;
+    protected JTextField textField;
+    protected JButton editButton;
 
     public EditableField(String fieldName, String initialValue) {
         super(fieldName , Colors.DARK_BLUE_ACTIVE.getColor(), new Dimension(300, 150));
@@ -29,7 +29,7 @@ public class EditableField extends ContentField {
         editButton = new JButton("Edytuj");
         editButton.setFont(new Font("SansSerif", Font.BOLD, 16));
         editButton.setBackground(Colors.DARK_BLUE_HOVER.getColor());
-        editButton.setBorder(BorderFactory.createEmptyBorder(10,10,10,10));
+        editButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         editButton.setForeground(Color.WHITE);
         editButton.setFocusPainted(false);
         add(editButton, BorderLayout.EAST);
@@ -50,21 +50,8 @@ public class EditableField extends ContentField {
     public void setValue(String value) {
         textField.setText(value);
     }
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
 
-        // Rysowanie zaokrąglonego panelu
-        Graphics2D g2d = (Graphics2D) g.create();
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // Rysowanie tła
-        g2d.setColor(getBackground() != null ? getBackground() : new Color(33, 42, 49));
-        g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20); // Promień zaokrąglenia: 20
-
-        g2d.dispose();
-    }
-    public JButton getButton(){
+    public JButton getButton() {
         return editButton;
     }
 }

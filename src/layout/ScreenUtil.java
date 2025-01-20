@@ -2,9 +2,11 @@ package layout;
 
 import dataclass.fileoperations.CentralDatabase;
 import dataclass.user.User;
+import dataclass.user.Users;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 public abstract class ScreenUtil implements Screen {
     protected static JFrame rightBackPanel; // Jeden wspólny JFrame
@@ -31,6 +33,7 @@ public abstract class ScreenUtil implements Screen {
             rightBackPanel.setUndecorated(true);
 
         }
+
         this.centralPanelDimension = new Dimension(width, height);
         // Gradientowe tło
         mainPanel = createGradientPanel();
@@ -53,14 +56,20 @@ public abstract class ScreenUtil implements Screen {
         wrapperPanel.add(centralPanel, gbc);
         mainPanel.add(wrapperPanel, BorderLayout.CENTER);
         rightBackPanel.setContentPane(mainPanel);
+        try {
+            CentralDatabase.getInstance().loadAll();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Załadowano obiekty");
     }
 
-    protected abstract void createScreenContent(User user);
+    protected abstract void createScreenContent(Users user);
     protected abstract void addListener(Component component, Runnable action);
 
-    public void showScreen() {
+    public void showScreen(Users user) {
         centralPanel.removeAll(); // Usuwamy starą zawartość
-        createScreenContent(CentralDatabase.getInstance().getUser());    // Tworzymy nową zawartość
+        createScreenContent(user);    // Tworzymy nową zawartość
         rightBackPanel.revalidate();
         rightBackPanel.repaint();
         rightBackPanel.setVisible(true);

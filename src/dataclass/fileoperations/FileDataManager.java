@@ -4,23 +4,25 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class FileDataManager<T extends Serializable> implements DataManager<T> {
     private final String folderPath;
-    private final String filePrefix;
+    private final Set<String> prefixes;
 
-    public FileDataManager(String folderPath, String filePrefix) {
-        this.folderPath = "data/"+(folderPath.endsWith("/") ? folderPath : folderPath + "/");
-        this.filePrefix = filePrefix;
+    public FileDataManager(String folderPath, Set<String> prefixes) {
+        this.folderPath = "data/" + (folderPath.endsWith("/") ? folderPath : folderPath + "/");
+        this.prefixes = prefixes;
 
-        // Tworzymy folder, jeśli nie istnieje
+        // Create folder if it does not exist
         File folder = new File(this.folderPath);
         if (!folder.exists()) {
             folder.mkdirs();
         }
+    }
+
+    public Set<String> getPrefixes() {
+        return prefixes;
     }
 
     @Override
@@ -28,12 +30,16 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
         Map<String, T> data = new HashMap<>();
         File folder = new File(folderPath);
 
-        for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> name.startsWith(filePrefix) && name.endsWith(".dat")))) {
+        for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> matchesAnyPrefix(name) && name.endsWith(".dat")))) {
             String id = extractIdFromFileName(file.getName());
             data.put(id, load(id));
         }
 
         return data;
+    }
+
+    private boolean matchesAnyPrefix(String fileName) {
+        return prefixes.stream().anyMatch(fileName::startsWith);
     }
 
     @Override
@@ -63,7 +69,6 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
     public void save(String id, T item) throws IOException {
         String fileName = getFileName(id);
         Path filePath = Paths.get(folderPath, fileName);
-
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath.toFile()))) {
             oos.writeObject(item);
         }
@@ -86,7 +91,7 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
     @Override
     public void clearAll() throws IOException {
         File folder = new File(folderPath);
-        for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> name.startsWith(filePrefix) && name.endsWith(".dat")))) {
+        for (File file : Objects.requireNonNull(folder.listFiles((dir, name) -> matchesAnyPrefix(name) && name.endsWith(".dat")))) {
             if (!file.delete()) {
                 throw new IOException("Failed to delete file: " + file.getName());
             }
@@ -96,7 +101,7 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
     @Override
     public long count() {
         File folder = new File(folderPath);
-        return Objects.requireNonNull(folder.listFiles((dir, name) -> name.startsWith(filePrefix) && name.endsWith(".dat"))).length;
+        return Objects.requireNonNull(folder.listFiles((dir, name) -> matchesAnyPrefix(name) && name.endsWith(".dat"))).length;
     }
 
     private String getFileName(String id) {
@@ -105,10 +110,5 @@ public class FileDataManager<T extends Serializable> implements DataManager<T> {
 
     private String extractIdFromFileName(String fileName) {
         return fileName.substring(0, fileName.lastIndexOf(".dat"));
-    }
-    private int extractDecimalIdFromFileName(String fileName){
-        String id = extractIdFromFileName(fileName);
-        String intId = id.replace(filePrefix,"");
-        return Integer.parseInt(intId);
     }
 }

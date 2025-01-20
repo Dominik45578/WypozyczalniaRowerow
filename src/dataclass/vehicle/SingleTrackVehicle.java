@@ -9,10 +9,10 @@ import java.io.Serializable;
 /**
  * Class representing a single-track vehicle.
  */
-public class SingleTrackVehicle implements Vehicle, Serializable {
+public class SingleTrackVehicle implements Vehicle , Serializable {
     public static String STV_BIKE_PREFIX = "STVB";
     public static String STV_E_BIKE_PREFIX = "STVEB";
-    public static String STV_SCOOTER_PREFIX= "STVST";
+     public static String STV_SCOOTER_PREFIX= "STVST";
     public static final String BROKEN ="broken";
     public static final String OCCUPIED ="occupied";
     public static final String FREE ="free";
@@ -33,7 +33,7 @@ public class SingleTrackVehicle implements Vehicle, Serializable {
         this.vehicleId = vehicleId;
         this.vehicleType = vehicleName;
         this.vehicleModel = vehicleModel;
-        this.rented = true;
+        this.rented = false;
         this.renter = null;
     }
     @Override

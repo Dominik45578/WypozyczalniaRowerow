@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * Class representing a Bike, extending SingleTrackVehicle.
  */
-public class Bike extends SingleTrackVehicle implements Vehicle,Serializable{
+public class Bike extends SingleTrackVehicle implements Vehicle,Serializable {
 
     private boolean hasBasket;
 

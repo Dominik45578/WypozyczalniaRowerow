@@ -1,22 +1,27 @@
 package layout;
 
+import dataclass.fileoperations.CentralDatabase;
+import dataclass.fileoperations.CheckData;
+import dataclass.user.Customer;
 import dataclass.user.User;
+import dataclass.user.Users;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Map;
 
 public class LoginScreen extends ScreenUtil {
     JPanel formPanel ;
     public LoginScreen() {
-        super("Guckor Bike Rental - Login", 1000, 600);
+        super("Guckor Bike Rental - Logowanie", 1000, 650);
     }
 
     @Override
-    protected void createScreenContent(User user) {
+    protected void createScreenContent(Users user) {
         // Ustawienie układu centralnego panelu
-        centralPanel.setLayout(new BorderLayout(10, 10)); // 2 kolumny: lewa i prawa
+         centralPanel.setLayout(new BorderLayout(10, 10)); // 2 kolumny: lewa i prawa
         formPanel = new JPanel(new GridLayout(1,2,10,10));
         formPanel.setOpaque(false);
         // Lewy panel - obraz
@@ -41,15 +46,33 @@ public class LoginScreen extends ScreenUtil {
         loginTitle.setHorizontalAlignment(SwingConstants.CENTER);
         rightPanel.add(loginTitle);
 
-        rightPanel.add(createFormWrapper("Email"));
-        rightPanel.add(createFormWrapper("Hasło"));
+        FormWrapper emailField = new FormWrapper("E-mail", "Wpisz e-mail", CheckData::isValidExistingEmail);
+        FormWrapper passwordField = new FormWrapper("Hasło", "Wpisz hasło", CheckData::isValidPassword);
+        rightPanel.add(emailField);
+        rightPanel.add(passwordField);
 
         JButton loginButton = createRoundedButton("Zaloguj się",20);
         loginButton.setBackground(Colors.DARK_BLUE.getColor());
-//        loginButton.addActionListener(e -> {
-//            // Akcja logowania - przykład
-//            JOptionPane.showMessageDialog(frame, "Logowanie...");
-//        });
+        loginButton.addActionListener(e -> {
+            boolean allValid = true;
+            allValid &=emailField.validateInput();
+            allValid &=passwordField.validateInput();
+            if(allValid){
+                User searchUser = CentralDatabase.getInstance().FilterUser(emailField.getValue());
+                if(searchUser.getPassword().equals(passwordField.getValue())){
+                    JOptionPane.showMessageDialog(rightPanel, "Logowanie...");
+                    CentralDatabase.getInstance().setCurrentUser(CentralDatabase.getInstance().FilterUser(emailField.getValue()));
+                    new MainScreen().showScreen(searchUser.getUserType());
+                }
+                else{
+                    passwordField.getTextField().setForeground(Color.RED);
+                }
+            }else{
+                 emailField.getTextField().setForeground(Color.RED);
+                 passwordField.getTextField().setForeground(Color.RED);
+            }
+
+        });
         rightPanel.add(loginButton);
 
         // Dodanie paneli do centralnego panelu
@@ -59,8 +82,7 @@ public class LoginScreen extends ScreenUtil {
         centralPanel.add(upperContentPanel, BorderLayout.NORTH);
         centralPanel.add(formPanel, BorderLayout.CENTER);
     }
-
-    private JPanel createUpperPanel() {
+     private JPanel createUpperPanel() {
         upperContentPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
         upperContentPanel.setLayout(new BorderLayout());
         upperContentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -69,15 +91,16 @@ public class LoginScreen extends ScreenUtil {
         JLabel titleLabel = createLabel("Logowanie użytkownika", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         JButton backButton = createRoundedButton("< Wróć" , 20);
-        addListener(backButton, () -> SwingUtilities.invokeLater(() -> new WelcomeScreen().showScreen()));
+        addListener(backButton, () -> SwingUtilities.invokeLater(() -> new WelcomeScreen().showScreen(CentralDatabase.getInstance().getCurrentUser()==null? null : CentralDatabase.getInstance().getCurrentUser().getUserType())));
         upperContentPanel.add(backButton, BorderLayout.WEST);
         upperContentPanel.add(titleLabel, BorderLayout.CENTER);
 
         return upperContentPanel;
     }
+
     @Override
     protected void addListener(Component component, Runnable action) {
-        component.addMouseListener(new MouseAdapter() {
+              component.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 action.run();
@@ -88,7 +111,7 @@ public class LoginScreen extends ScreenUtil {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             LoginScreen loginScreen = new LoginScreen();
-            loginScreen.showScreen();
+            loginScreen.showScreen(null);
         });
     }
 }

@@ -3,6 +3,8 @@ package layout;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ErrorsTogglePanel extends AbstractEditablePanel {
     JPanel errorsPanel;
@@ -26,13 +28,48 @@ public class ErrorsTogglePanel extends AbstractEditablePanel {
         errorsPanel.add(Box.createVerticalStrut(10));
         errorsPanel.add(new ErrorField("Błąd Email", "Email musi zawierać znaki @ i .", new Dimension(100, 100)));
         errorsPanel.add(Box.createVerticalStrut(10));
-        errorsPanel.add(new ErrorField("Błąd Email", "Email musi zawierać znaki @ i .", new Dimension(100, 100)));
-
+        errorsPanel.add(new ErrorField("Błąd Email", "Email musi zawierać znaki @ i .", new Dimension(100, 80)));
+        errorsPanel.setBorder(BorderFactory.createEmptyBorder(1, 1, 1, 5));
         // Tworzenie JScrollPane dla panelu błędów
         JScrollPane scrollPane = new JScrollPane(errorsPanel);
         scrollPane.setBackground(Colors.BACKGROUND.getColor());
         setScrollPane(scrollPane);
+        closeLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                setElementVisible(false);
+            }
+        });
         contentPanel.add(scrollPane);
+    }
+
+    void add(ErrorField error) {
+        Component[] components = errorsPanel.getComponents();
+        for (Component component : components) {
+            if (component instanceof ErrorField) {
+                ErrorField f = (ErrorField) component;
+                if (f.getLabel().equals(error.getLabel())) {
+                    // Jeśli istnieje komponent z takim samym label, kończymy metodę
+                    return;
+                }
+            }
+        }
+        // Dodajemy nowy ErrorField
+        errorsPanel.add(error);
+        errorsPanel.add(Box.createVerticalStrut(10)); // Przerwa między elementami
+        errorsPanel.revalidate(); // Aktualizacja układu panelu
+        errorsPanel.repaint();    // Odświeżenie widoku
+    }
+
+    void del(ErrorField error) {
+        Component[] components = errorsPanel.getComponents();
+        for (Component component : components) {
+            if (error.equals(component)) {
+                errorsPanel.remove(component);
+            }
+        }
+        errorsPanel.revalidate();
+        errorsPanel.repaint();
     }
 
     void setScrollPane(JScrollPane scrollPane) {
@@ -102,7 +139,7 @@ public class ErrorsTogglePanel extends AbstractEditablePanel {
 
     @Override
     void addMenuListener(Runnable action) {
-        // Implementacja metody
+
     }
 
     @Override

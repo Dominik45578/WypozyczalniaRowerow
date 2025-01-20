@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 /**
  * Class to handle rental transactions.
  */
-public class RentalTransaction {
+public class RentalTransaction implements Serializable{
     private static int lastNumber;
     private final Vehicle vehicle;
     private final User user;
@@ -17,13 +17,13 @@ public class RentalTransaction {
     private LocalDateTime rentalEnd;
     private final String transactionID;
 
-    public RentalTransaction(Vehicle vehicle, User user) {
+    public RentalTransaction(String id,Vehicle vehicle, User user) {
         this.vehicle = vehicle;
         this.user = user;
         this.rentalStart = LocalDateTime.now();
-        this.transactionID = user.getID()+vehicle.getVehicleId()+rentalStart+lastNumber;
+        this.transactionID = id;
         lastNumber++;
-        user.rentItem(vehicle.getVehicleId(), vehicle);
+
     }
 
     public void endRental() {

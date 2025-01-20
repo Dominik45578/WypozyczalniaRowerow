@@ -3,7 +3,7 @@ package layout;
 import javax.swing.*;
 import java.awt.*;
 
-public class ContentField extends JPanel {
+public class ContentField extends JPanel implements Screen{
     protected JLabel label;
 
     public ContentField(String labelText, Color backgroundColor, Dimension preferredSize) {

@@ -1,15 +1,85 @@
 package dataclass.fileoperations;
 
+import dataclass.user.Customer;
+import dataclass.user.PrivateCustomer;
+import dataclass.user.User;
+
 import java.util.regex.Pattern;
 
 public class CheckData {
 
-    // Sprawdzenie poprawności adresu e-mail
-    public static boolean isValidEmail(String email) {
-        if (email == null || email.length() < 6) {
+    // Sprawdzenie poprawności adresu (np. "Stanisława Skarżyńskiego")
+    public static boolean isValidAdres(String adres) {
+        if (adres == null || adres.isEmpty()) {
             return false;
         }
-        return email.contains("@") && email.contains(".");
+        return adres.matches("^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+( [A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)*$");
+    }
+
+    // Sprawdzenie poprawności numeru budynku (np. "4b/d1", "123", "4/4")
+    public static boolean isValidHouseNumber(String houseNumber) {
+        if (houseNumber == null || houseNumber.isEmpty()) {
+            return false;
+        }
+        return houseNumber.matches("^[0-9]+[a-zA-Z]?(/[0-9]+[a-zA-Z]?)?$");
+    }
+
+    public static boolean isValidAStreetAndNumber(String adres) {
+    if (adres == null || adres.isEmpty()) {
+        return false;
+    }
+
+    // Użycie wyrażenia regularnego do podziału adresu na nazwę ulicy i numer
+    String regex = "^(?<street>[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?: [A-ZĄĆĘŁŃÓŚŹŻa-ząćęłńóśźż]+)*?) (?<number>[0-9]+[a-zA-Z]?(/[0-9]+[a-zA-Z]?)?)$";
+    var matcher = java.util.regex.Pattern.compile(regex).matcher(adres);
+
+    if (!matcher.matches()) {
+        return false;
+    }
+
+    // Pobranie grup dla walidacji szczegółowej (opcjonalnie, jeśli potrzebujesz)
+    String streetName = matcher.group("street");
+    String houseNumber = matcher.group("number");
+
+    // Możesz dodać dodatkowe sprawdzenia, jeśli potrzebne
+
+    return true; // Adres pasuje do całego wzorca
+}
+
+
+    // Sprawdzenie poprawności numeru PESEL
+    public static boolean isValidPesel(String pesel) {
+        if (pesel == null || !pesel.matches("\\d{11}")) {
+            return false;
+        }
+//        if(CentralDatabase.getInstance().existsObject(
+//                User.class,
+//                (Customer customer)->customer.getPesel().equals(pesel)
+//                )){
+//            return false;
+//        }
+//
+//        int[] weights = {9, 7, 3, 1, 9, 7, 3, 1, 9, 7, 1};
+//        int sum = 0;
+//        for (int i = 0; i < 11; i++) {
+//            sum += (pesel.charAt(i) - '0') * weights[i];
+//        }
+//
+//        return sum % 10 == 0;
+        return true;
+    }
+
+    public static boolean isValidEmail(String email) {
+        if (CentralDatabase.getInstance().emailExists(email)) {
+            return false;
+        }
+        return email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+     public static boolean isValidExistingEmail(String email) {
+        if (CentralDatabase.getInstance().emailExists(email)) {
+            return true;
+        }
+        return false;
     }
 
     // Sprawdzenie, czy dwa hasła są takie same
@@ -18,7 +88,7 @@ public class CheckData {
             return false;
         }
 
-        return password1.equals(password2);
+        return password1.equals(password2) && isValidPassword(password1) && isValidPassword(password2);
     }
 
     public static boolean isValidPassword(String password) {
@@ -75,14 +145,13 @@ public class CheckData {
     }
 
     public static boolean isValidName(String name) {
-        if (name == null || name.isEmpty()) {
+        if (name == null || name.length() < 3) {
             return false;
         }
         return Pattern.matches("[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]*", name);
     }
-
-    public static boolean isValidAdres(String adres){
-        return !adres.matches(".*[0-9].*");
+    public static boolean isValidNIP(String nip) {
+        return nip != null && nip.matches("\\d{10}");
     }
 }
 

@@ -1,44 +1,49 @@
 package layout;
 
+import dataclass.fileoperations.CentralDatabase;
 import dataclass.fileoperations.CheckData;
-import dataclass.user.User;
+import dataclass.user.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Map;
-import java.util.function.Predicate;
-
-import static com.sun.java.accessibility.util.AWTEventMonitor.addActionListener;
+import java.io.IOException;
 
 public class RegisterScreen extends ScreenUtil {
-    ErrorsTogglePanel element = new ErrorsTogglePanel(
-            new Dimension(400,  500),
-            "Błędy"
-    );
-    JPanel panel;
+    ErrorsTogglePanel element;
+    JPanel errorTogglePanel;
     JLayeredPane rightLayers;
+    JPanel buissnesTogglePanel;
+    Users userType;
+    Customer tempUser;
 
     public RegisterScreen() {
-        super("Guckor Bike Rental - Rejestracja", 1000, 750);
+        super("Guckor Bike Rental - Rejestracja", 1100, 800);
     }
 
     private void createErrorLayer() {
-        panel = createRoundedPanel(new Color(0, 0, 0, 100));
-        panel.setPreferredSize(rightLayers.getPreferredSize());
-        panel.setBounds(0, 0, rightLayers.getPreferredSize().width, rightLayers.getPreferredSize().height); // Ustawienie wymiarów zgodnych z rodzicem
-        panel.setLayout(new GridBagLayout());
-        //element.setPreferredSize(new Dimension(rightLayers.getWidth() / 2, rightLayers.getHeight() - 100));
-        panel.add(element);
-        panel.setVisible(false); // Ukrycie panelu
-        rightLayers.add(panel, JLayeredPane.PALETTE_LAYER);
+        errorTogglePanel = createRoundedPanel(new Color(0, 0, 0, 1));
+        errorTogglePanel.setOpaque(false);
+        errorTogglePanel.setPreferredSize(rightLayers.getPreferredSize());
+        errorTogglePanel.setBounds(0, 0, rightLayers.getPreferredSize().width, rightLayers.getPreferredSize().height); // Ustawienie wymiarów zgodnych z rodzicem
+        errorTogglePanel.setLayout(new GridBagLayout());
+        element = new ErrorsTogglePanel(rightLayers.getPreferredSize(), "Błędy");
+        // element.setPreferredSize(new Dimension(rightLayers.getWidth() / 2, rightLayers.getHeight() - 100));
+        errorTogglePanel.add(element);
+        element.setVisible(false);
+        element.setElementPreferredSize(new Dimension(rightLayers.getPreferredSize().width / 2 + 150, rightLayers.getPreferredSize().height / 2 + 150));
+        rightLayers.revalidate();
+        rightLayers.repaint();
+        errorTogglePanel.setVisible(true); // Ukrycie panelu
+        rightLayers.add(errorTogglePanel, JLayeredPane.PALETTE_LAYER);
     }
 
 
     @Override
-    protected void createScreenContent(User user) {
+    protected void createScreenContent(Users user) {
         // Ustawienie układu centralnego panelu
+        this.userType = user;
         centralPanel.setLayout(new BorderLayout(10, 10));
 
         // Dodanie górnego panelu
@@ -58,7 +63,65 @@ public class RegisterScreen extends ScreenUtil {
                 action.run();
             }
         });
+    }
 
+    private JPanel createBuissnesTogglePanel() {
+        JPanel buissnesTogglePanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buissnesTogglePanel.setPreferredSize(rightLayers.getPreferredSize());
+        buissnesTogglePanel.setBounds(0, 0, rightLayers.getPreferredSize().width, rightLayers.getPreferredSize().height - 50);
+        buissnesTogglePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        buissnesTogglePanel.setLayout(new GridLayout(7, 2, 10, 10));
+        FormWrapper companyNameField = new FormWrapper("Nazwa firmy", "Wpisz nazwę firmy", CheckData::isValidName);
+        FormWrapper companyAddressField = new FormWrapper("Adres firmy", "Wpisz ulicę oraz numer budynku", CheckData::isValidAStreetAndNumber);
+        FormWrapper companyPostalCodeField = new FormWrapper("Kod pocztowy firmy", "Wpisz kod pocztowy", CheckData::isValidPostalCode);
+        FormWrapper companyCityField = new FormWrapper("Miejscowość firmy", "Wpisz miejscowość", CheckData::isValidName);
+        FormWrapper companyPhoneNumberField = new FormWrapper("Numer telefonu firmy", "Wpisz numer telefonu", CheckData::isValidPhoneNumber);
+        FormWrapper companyEmailField = new FormWrapper("Email firmy", "Wpisz email firmy", CheckData::isValidEmail);
+        FormWrapper companyNIPField = new FormWrapper(true, "Numer NIP firmy", "Wpisz NIP", CheckData::isValidNIP);
+        buissnesTogglePanel.add(companyNameField);
+        buissnesTogglePanel.add(companyAddressField);
+        buissnesTogglePanel.add(companyPostalCodeField);
+        buissnesTogglePanel.add(companyCityField);
+        buissnesTogglePanel.add(companyPhoneNumberField);
+        buissnesTogglePanel.add(companyEmailField);
+        buissnesTogglePanel.add(companyNIPField);
+        buissnesTogglePanel.add(new JLabel());
+        buissnesTogglePanel.setVisible(false);
+        JButton backButton = createRoundedButton("< Wróć", 20);
+        addListener(backButton, () -> buissnesTogglePanel.setVisible(false));
+        buissnesTogglePanel.add(backButton);
+        JButton registerButton = createRoundedButton("Utwórz konto", Color.WHITE, Colors.DARK_BLUE.getColor(), new Font("Sanserif", Font.BOLD, 20));
+        registerButton.addActionListener(g -> {
+            boolean allValid = true;
+            allValid &= companyNameField.validateInput();
+            allValid &= companyAddressField.validateInput();
+            allValid &= companyPostalCodeField.validateInput();
+            allValid &= companyCityField.validateInput();
+            allValid &= companyEmailField.validateInput();
+            allValid &= companyPhoneNumberField.validateInput();
+            allValid &= companyNIPField.validateInput();
+            if (allValid && tempUser != null) {
+                User businessUser = new BusinessCustomer(tempUser, companyNameField.getValue(),
+                        CentralDatabase.getInstance().getNextID(User.class, User.BUSINESS_C_PREFIX), companyAddressField.getValue(),
+                        companyPostalCodeField.getValue(), companyCityField.getValue(), companyPhoneNumberField.getValue(),
+                        companyEmailField.getValue(), companyNIPField.getValue());
+                CentralDatabase.getInstance().addObject(User.class, businessUser.getID(), businessUser);
+                try {
+                    CentralDatabase.getInstance().saveAll();
+                    CentralDatabase.getInstance().loadAll();
+                    JOptionPane.showMessageDialog(rightBackPanel, "Wszystkie dane są poprawne!");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                CentralDatabase.getInstance().setCurrentUser(CentralDatabase.getInstance().FilterUser(businessUser.getEmail()));
+                SwingUtilities.invokeLater(() -> {
+                    ScreenUtil mainScreen = new MainScreen();
+                    mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser() == null ? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
+                });
+            }
+        });
+        buissnesTogglePanel.add(registerButton);
+        return buissnesTogglePanel;
     }
 
     private JPanel createUpperPanel() {
@@ -66,11 +129,16 @@ public class RegisterScreen extends ScreenUtil {
         upperContentPanel.setLayout(new BorderLayout());
         upperContentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         upperContentPanel.setPreferredSize(new Dimension(0, 80));
+        JLabel titleLabel;
+        if (userType == Users.BUSINESS_CUSTOMER) {
+            titleLabel = createLabel("Rejestracja Użytkownika Biznesowego", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
+        } else {
+            titleLabel = createLabel("Rejestracja Użytkownika", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
 
-        JLabel titleLabel = createLabel("Rejestracja Użytkownika", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
+        }
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         JButton backButton = createRoundedButton("< Wróć", 20);
-        addListener(backButton, () -> SwingUtilities.invokeLater(() -> new WelcomeScreen().showScreen()));
+        addListener(backButton, () -> SwingUtilities.invokeLater(() -> new WelcomeScreen().showScreen(null)));
         upperContentPanel.add(backButton, BorderLayout.WEST);
         upperContentPanel.add(titleLabel, BorderLayout.CENTER);
 
@@ -101,7 +169,7 @@ public class RegisterScreen extends ScreenUtil {
         JPanel loginButtonPanel = createRoundedPanel(new Color(68, 68, 68));
         loginButtonPanel.setBorder(BorderFactory.createEmptyBorder(50, 20, 50, 20));
         loginButtonPanel.add(loginButton);
-        loginButton.addActionListener(e -> SwingUtilities.invokeLater(() -> new LoginScreen().showScreen()));
+        loginButton.addActionListener(e -> SwingUtilities.invokeLater(() -> new LoginScreen().showScreen(null)));
 
         leftPanel.add(leftCentralPanel, BorderLayout.CENTER);
         leftPanel.add(loginButtonPanel, BorderLayout.SOUTH);
@@ -114,12 +182,16 @@ public class RegisterScreen extends ScreenUtil {
 
         rightLayers = new JLayeredPane();
         rightLayers.setPreferredSize(new Dimension((int) (centralPanelDimension.width - 10) / 2,
-                (int) centralPanelDimension.height - createUpperPanel().getPreferredSize().height));
+                (int) centralPanelDimension.height - createUpperPanel().getPreferredSize().height + 10));
 
         JPanel rightBackPanel = createRightBackPanel();
         rightLayers.add(rightBackPanel, JLayeredPane.DEFAULT_LAYER);
-
+        if (userType == Users.BUSINESS_CUSTOMER) {
+            buissnesTogglePanel = createBuissnesTogglePanel();
+            rightLayers.add(buissnesTogglePanel, JLayeredPane.DRAG_LAYER);
+        }
         rightPanel.add(rightLayers);
+
         return rightPanel;
     }
 
@@ -134,35 +206,46 @@ public class RegisterScreen extends ScreenUtil {
         FormWrapper secondNameField = new FormWrapper("Drugie imię", "Wpisz drugie imię", CheckData::isValidName);
         FormWrapper lastNameField = new FormWrapper("Nazwisko", "Wpisz nazwisko", CheckData::isValidName);
         FormWrapper birthDateField = new FormWrapper("Data urodzenia", "DD-MM-YYYY", CheckData::isValidDate);
-        FormWrapper peselField = new FormWrapper("PESEL", "Wpisz PESEL", CheckData::isNumber);
+        FormWrapper peselField = new FormWrapper(true, "PESEL", "Wpisz PESEL", CheckData::isValidPesel);
         FormWrapper streetField = new FormWrapper("Ulica", "Wpisz ulicę", CheckData::isValidAdres);
         FormWrapper postalCodeField = new FormWrapper("Kod pocztowy", "Wpisz kod pocztowy", CheckData::isValidPostalCode);
-        FormWrapper houseNumberField = new FormWrapper("Numer domu", "Wpisz numer domu", CheckData::isNumber);
+        FormWrapper houseNumberField = new FormWrapper("Numer domu", "Wpisz numer domu", CheckData::isValidHouseNumber);
         FormWrapper cityField = new FormWrapper("Miejscowość", "Wpisz miejscowość", CheckData::isValidName);
         FormWrapper emailField = new FormWrapper("Email", "Wpisz email", CheckData::isValidEmail);
-        FormWrapper passwordField = new FormWrapper("Hasło", "Wpisz hasło", CheckData::isValidPassword);
-        FormWrapper repeatPasswordField = new FormWrapper("Powtórz Hasło", "Powtórz hasło", CheckData::arePasswordsMatching, passwordField);
-        passwordField.getTextField().setText("");
+        FormWrapper passwordField = new FormWrapper(true, "Hasło", "Wpisz hasło", CheckData::isValidPassword);
+        FormWrapper repeatPasswordField = new FormWrapper(true, "Powtórz Hasło", "Powtórz hasło", CheckData::arePasswordsMatching, passwordField);
+
+
+        passwordField.setSingleValidationMethod(null);
+        passwordField.setDoubleValidationMethod(CheckData::arePasswordsMatching, repeatPasswordField);
+
+
         // Dodawanie wszystkich pól do panelu
         rightBackPanel.add(firstNameField);
         rightBackPanel.add(secondNameField);
         rightBackPanel.add(lastNameField);
         rightBackPanel.add(birthDateField);
         rightBackPanel.add(peselField);
-        rightBackPanel.add(streetField);
-        rightBackPanel.add(postalCodeField);
-        rightBackPanel.add(houseNumberField);
         rightBackPanel.add(cityField);
+        rightBackPanel.add(streetField);
+
+        rightBackPanel.add(houseNumberField);
+        rightBackPanel.add(postalCodeField);
         rightBackPanel.add(emailField);
         rightBackPanel.add(passwordField);
         rightBackPanel.add(repeatPasswordField);
 
-        JButton button = createRoundedButton("Błędy" ,Colors.DARK_BLUE_HOVER.getColor(), Color.WHITE,
+        JButton button = createRoundedButton("Błędy", Colors.DARK_BLUE_HOVER.getColor(), Color.WHITE,
                 new Font("SansSerif", Font.PLAIN, 20));
         createToggleMenu(button);
         rightBackPanel.add(button);
-        JButton registerButton = createRoundedButton("Utwórz konto" ,Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE,
-                new Font("SansSerif", Font.PLAIN, 20));
+        JButton registerButton;
+        if (userType == Users.BUSINESS_CUSTOMER) {
+            registerButton = createRoundedButton("Dalej ->", Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20));
+        } else {
+            registerButton = createRoundedButton("Utwórz konto", Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20));
+        }
+
         registerButton.addActionListener(e -> {
             boolean allValid = true;
             allValid &= firstNameField.validateInput();
@@ -175,14 +258,42 @@ public class RegisterScreen extends ScreenUtil {
             allValid &= houseNumberField.validateInput();
             allValid &= cityField.validateInput();
             allValid &= emailField.validateInput();
-            allValid &= passwordField.validateInput();
+            allValid &= passwordField.validateInputWithRelatedField();
             allValid &= repeatPasswordField.validateInputWithRelatedField();
 
+
             if (allValid) {
-                JOptionPane.showMessageDialog(rightBackPanel, "Wszystkie dane są poprawne!");
+                Customer user = new PrivateCustomer(
+                        String.valueOf(CentralDatabase.getInstance().getNextID(User.class, User.PRIVATE_C_PREFIX)),
+                        firstNameField.getValue(), secondNameField.getValue(), lastNameField.getValue(),
+                        peselField.getValue(), postalCodeField.getValue(), cityField.getValue(), streetField.getValue(), emailField.getValue(), passwordField.getValue()
+                );
+                if (userType == Users.BUSINESS_CUSTOMER) {
+                    tempUser = user;
+                    buissnesTogglePanel.setVisible(true);
+                } else {
+                    CentralDatabase.getInstance().addObject(User.class, user.getID(), user);
+                    try {
+                        CentralDatabase.getInstance().saveAll();
+                        CentralDatabase.getInstance().loadAll();
+                        JOptionPane.showMessageDialog(rightBackPanel, "Wszystkie dane są poprawne!");
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    SwingUtilities.invokeLater(() -> {
+                        ScreenUtil mainScreen = new MainScreen();
+                        mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser() == null ? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
+                    });
+                    CentralDatabase.getInstance().setCurrentUser(CentralDatabase.getInstance().FilterUser(emailField.getValue()));
+                }
+
             } else {
-                JOptionPane.showMessageDialog(rightBackPanel, "Wystąpiły błędy w formularzu.");
+                element.setVisible(true);
+                rightLayers.revalidate();
+                rightLayers.repaint();
+                //  JOptionPane.showMessageDialog(rightBackPanel, "Wystąpiły błędy w formularzu.");
             }
+
         });
         rightBackPanel.add(registerButton);
 
@@ -193,15 +304,7 @@ public class RegisterScreen extends ScreenUtil {
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                panel.setVisible(true); // Pokazanie panelu
-                element.getCloseLabel().addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        panel.setVisible(false); // Ukrycie panelu
-                        rightLayers.revalidate();
-                        rightLayers.repaint();
-                    }
-                });
+                element.setVisible(true); // Pokazanie panelu
 
                 rightLayers.revalidate();
                 rightLayers.repaint();
@@ -210,17 +313,10 @@ public class RegisterScreen extends ScreenUtil {
     }
 
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            RegisterScreen registerScreen = new RegisterScreen();
-            registerScreen.showScreen();
-        });
-    }
-
     @Override
     public JPanel createFormWrapper(String title, String label) {
         JPanel formWrapper = createRoundedPanel(new Color(85, 84, 84));//new Color(218, 237, 248));
-        formWrapper.setLayout(new BorderLayout(10,10));
+        formWrapper.setLayout(new BorderLayout(10, 10));
         formWrapper.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         formWrapper.setOpaque(false);
         JLabel formTitle = new JLabel(title + " : ");

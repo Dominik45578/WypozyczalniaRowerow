@@ -3,8 +3,6 @@ package layout;
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 // Abstract class defining common properties and behavior
 public abstract class AbstractEditablePanel extends JPanel {
@@ -22,9 +20,10 @@ public abstract class AbstractEditablePanel extends JPanel {
         setLayout(new GridBagLayout());
 
         // Create the main panel
+        setPreferredSize(dimension);
         mainPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
-        mainPanel.setPreferredSize(dimension);
         mainPanel.setLayout(new BorderLayout());
+        mainPanel.setPreferredSize(new Dimension(dimension.width / 2 + 100, dimension.height / 2 + 100));
         add(mainPanel);
 
         // Create the title panel
@@ -79,8 +78,18 @@ public abstract class AbstractEditablePanel extends JPanel {
     public JLabel getCloseLabel() {
         return closeLabel;
     }
+
     abstract void addMenuListener(Runnable action);
+
     abstract String getEnteredText();
+
     abstract boolean validateData();
+
+    void setElementPreferredSize(Dimension d){
+        this.mainPanel.setPreferredSize(d);
+    }
+    void setElementVisible(boolean b) {
+        super.setVisible(false);
+    }
 }
 
