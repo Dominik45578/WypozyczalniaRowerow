@@ -1,13 +1,16 @@
 package dataclass.user;
 
+import dataclass.fileoperations.CentralDatabase;
+
 /**
  * Class representing a private customer.
  */
 public class PrivateCustomer extends Customer {
 
-    public PrivateCustomer(String customerId, String firstName, String secondName, String lastName,
+    public PrivateCustomer(String firstName, String secondName, String lastName,
                            String pesel, String postalCode, String city, String address, String email, String password) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
+        super(firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
+        this.customerId = CentralDatabase.getInstance().getNextID(User.class,User.PRIVATE_C_PREFIX);
     }
 
 
@@ -16,10 +19,6 @@ public class PrivateCustomer extends Customer {
         return customerId;
     }
 
-    @Override
-    public void setID(String id) {
-        customerId = id;
-    }
 
     @Override
     public Users getUserType() {

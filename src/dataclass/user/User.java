@@ -30,8 +30,6 @@ public interface User extends Serializable {
 
     int getNumberOfRentedItems();
 
-    void setNumberOfRentedItems(int numberOfRentedItems);
-
     String getEmail();
 
     void setEmail(String email);
@@ -42,14 +40,10 @@ public interface User extends Serializable {
 
     Map<String, RentalTransaction> getRentedHistory();
 
-    void setRentedHistory(Map<String, RentalTransaction> rentedHistory);
-
     String getID();
-    void setID(String id);
+    boolean rentItem(String itemId, Vehicle vehicle);
 
-    void rentItem(String itemId, Vehicle vehicle);
-
-    void returnItem(String itemId);
+    boolean returnItem(String itemId);
 
     void removeRentedItem(String itemId);
 

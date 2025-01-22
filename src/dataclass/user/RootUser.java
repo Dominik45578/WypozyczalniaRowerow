@@ -1,5 +1,6 @@
 package dataclass.user;
 
+import dataclass.fileoperations.CentralDatabase;
 import dataclass.rental.RentalServices;
 import dataclass.rental.RentalTransaction;
 import dataclass.vehicle.Vehicle;
@@ -19,21 +20,21 @@ public class RootUser  implements User {
     private String surName;
     private String email;
     private String password;
-    private  String id;
+    private String id;
+    protected static String accessPin;
 
-    public RootUser(String id) {
-        super();
-        this.id = id;
+    public RootUser(String firstName, String secondName, String surName, String email, String password) {
+        this.id = CentralDatabase.getInstance().getNextID(User.class,User.ROOT_PREFIX);
+        this.firstName = firstName;
+        this.secondName = secondName;
+        this.surName = surName;
+        this.email = email;
+        this.password = password;
     }
 
     @Override
     public String getID() {
         return id;
-    }
-
-    @Override
-    public void setID(String id) {
-        this.id = id;
     }
 
     @Override
@@ -54,7 +55,6 @@ public class RootUser  implements User {
     @Override
     public void setSecondName(String secondName) {
         this.secondName = secondName;
-
     }
 
     @Override
@@ -64,7 +64,7 @@ public class RootUser  implements User {
 
     @Override
     public void setLastName(String lastName) {
-        this.surName= lastName;
+        this.surName = lastName;
     }
 
     @Override
@@ -72,14 +72,10 @@ public class RootUser  implements User {
         return RentalServices.getInstance().getRentedVehicles().size();
     }
 
-    @Override
-    public void setNumberOfRentedItems(int numberOfRentedItems) {
-
-    }
 
     @Override
     public String getEmail() {
-        return  email;
+        return email;
     }
 
     @Override
@@ -90,9 +86,9 @@ public class RootUser  implements User {
 
     @Override
     public Map<String, Vehicle> getRentedItems() {
-        List<Vehicle> vehicles= RentalServices.getInstance().getRentedVehicles();
-        Map<String,Vehicle> vehicleMap = new HashMap<>();
-        for(Vehicle v : vehicles){
+        List<Vehicle> vehicles = RentalServices.getInstance().getRentedVehicles();
+        Map<String, Vehicle> vehicleMap = new HashMap<>();
+        for (Vehicle v : vehicles) {
             vehicleMap.put(v.getVehicleId(), v);
         }
         return vehicleMap;
@@ -109,18 +105,13 @@ public class RootUser  implements User {
     }
 
     @Override
-    public void setRentedHistory(Map<String, RentalTransaction> rentedHistory) {
-
+    public boolean rentItem(String itemId, Vehicle vehicle) {
+        return false;
     }
 
     @Override
-    public void rentItem(String itemId, Vehicle vehicle) {
-
-    }
-
-    @Override
-    public void returnItem(String itemId) {
-
+    public boolean returnItem(String itemId) {
+        return false;
     }
 
     @Override
@@ -140,7 +131,13 @@ public class RootUser  implements User {
 
     @Override
     public void setPassword(String password) {
-            this.password = password;
+        this.password = password;
     }
 
+    public static void setAccessPin(String accessPin) {
+        RootUser.accessPin = accessPin;
+    }
+    public static String getAccessPin() {
+        return accessPin;
+    }
 }

@@ -71,14 +71,14 @@ public class ContentPanel extends JPanel implements Screen {
         // Aktualizacja etykiet
         idLabel.setText(vehicle.getVehicleId());
         isRentedLabel.setText(vehicle.isRented() ? "Zajęty" : "Wolny");
-        brandLabel.setText(vehicle.getVehicleModel());
-        typeLabel.setText(vehicle.getClass().getSimpleName());
+        brandLabel.setText(vehicle.getVehicleBrand().getName()+" "+vehicle.getVehicleModel());
+        typeLabel.setText(vehicle.getClass().getSimpleName()+" "+vehicle.getType());
 
         // Aktualizacja przycisku
         if (vehicle.isRented()) {
             rentButton.setVisible(false);
         } else {
-            rentButton.setText("Wypożycz");
+            rentButton.setText("Wypożycz za "+vehicle.getPrice()+"/d");
             rentButton.setVisible(true);
         }
 
@@ -128,6 +128,9 @@ public class ContentPanel extends JPanel implements Screen {
         g2d.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
         super.paintComponent(g);
         g2d.dispose();
+    }
+    public JButton getRentButton(){
+        return rentButton;
     }
 
 }

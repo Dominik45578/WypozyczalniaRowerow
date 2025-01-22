@@ -2,6 +2,8 @@
 // Updated Bike class
 package dataclass.vehicle;
 
+import dataclass.fileoperations.CentralDatabase;
+
 import java.io.Serializable;
 
 /**
@@ -9,11 +11,14 @@ import java.io.Serializable;
  */
 public class Bike extends SingleTrackVehicle implements Vehicle,Serializable {
 
-    private boolean hasBasket;
+    protected boolean hasBasket;
+    protected boolean forKids;
 
-    public Bike(String vehicleId, String vehicleName, String vehicleModel, boolean hasBasket) {
-        super(vehicleId, vehicleName, vehicleModel);
+     public Bike(String type,VehicleBrand brand ,VehicleModel model, boolean hasBasket, boolean forKids) {
+        super(type,brand, model);
+        this.vehicleId = CentralDatabase.getInstance().getNextID(Vehicle.class,STV_BIKE_PREFIX);
         this.hasBasket = hasBasket;
+        this.forKids = forKids;
     }
 
     public boolean hasBasket() {
@@ -22,5 +27,17 @@ public class Bike extends SingleTrackVehicle implements Vehicle,Serializable {
 
     public void setHasBasket(boolean hasBasket) {
         this.hasBasket = hasBasket;
+    }
+
+    public boolean isHasBasket() {
+        return hasBasket;
+    }
+
+    public boolean isForKids() {
+        return forKids;
+    }
+
+    public void setForKids(boolean forKids) {
+        this.forKids = forKids;
     }
 }

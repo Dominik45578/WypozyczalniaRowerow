@@ -75,7 +75,7 @@ public class CentralDatabase {
             FileDataManager<Vehicle> vehicleManager = new FileDataManager<>("Vehicle", vehiclePrefixes);
             registerManager(Vehicle.class, vehicleManager);
 
-            Set<String> brands = Set.of("VB");
+            Set<String> brands = Set.of("");
             FileDataManager<VehicleBrand> vehicleBrand = new FileDataManager<>("Brand", brands);
             registerManager(VehicleBrand.class, vehicleBrand);
 

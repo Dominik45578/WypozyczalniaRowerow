@@ -1,27 +1,22 @@
 package dataclass.user;
 
 
+import dataclass.fileoperations.CentralDatabase;
+
 import java.util.Map;
 
 public class Employee extends Customer implements User{
-    private String employeeId;
     private String position; // Rola pracownika
     private BusinessCustomer employer; // Powiązana firma
-    public static Employee createNewEmployee(){
-        return new Employee("null","null","null","null",
-                  "null","null","null","null","null", "null");
-    }
 
 
 
-    public Employee(String customerId, String firstName, String secondName, String lastName, String pesel,
+
+    public Employee(String firstName, String secondName, String lastName, String pesel,
                     String postalCode, String city, String address, String email, String password) {
-        super(customerId, firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
-        employeeId = customerId;
-    }
-
-    public String getEmployeeId() {
-        return employeeId;
+        super(firstName, secondName, lastName, pesel, postalCode, city, address, email, password);
+        this.customerId = CentralDatabase.getInstance().getNextID(User.class,User.EMPLOYEE_C_PREFIX);
+        this.phoneNumber ="Brak";
     }
 
     public String getPosition() {
@@ -31,22 +26,14 @@ public class Employee extends Customer implements User{
     public BusinessCustomer getEmployer() {
         return employer;
     }
-
+    public void setEmployer(BusinessCustomer bc){
+        this.employer = bc;
+    }
     @Override
     public int getNumberOfRentedItems() {
         return rentedItems.size();
     }
 
-    @Override
-    public String getID() {
-        return employeeId;
-    }
-
-    @Override
-    public void setID(String id) {
-        employeeId = id;
-
-    }
 
     @Override
     public Users getUserType() {

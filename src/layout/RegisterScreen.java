@@ -124,6 +124,71 @@ public class RegisterScreen extends ScreenUtil {
         return buissnesTogglePanel;
     }
 
+    private JPanel createRootPanel() {
+        JPanel rootPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        rootPanel.setPreferredSize(rightLayers.getPreferredSize());
+        rootPanel.setBounds(0, 0, rightLayers.getPreferredSize().width, rightLayers.getPreferredSize().height - 50);
+        rootPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        rootPanel.setLayout(new GridLayout(7, 2, 10, 10));
+        FormWrapper firstNameField = new FormWrapper("Pierwsze imię", "Wpisz imię", CheckData::isValidName);
+        FormWrapper secondNameField = new FormWrapper("Drugie imię", "Wpisz drugie imię", CheckData::isValidName);
+        FormWrapper lastNameField = new FormWrapper("Nazwisko", "Wpisz nazwisko", CheckData::isValidName);
+        FormWrapper emailField = new FormWrapper("Email", "Wpisz email", CheckData::isValidEmail);
+        FormWrapper passwordField = new FormWrapper(true, "Hasło", "Wpisz hasło", CheckData::isValidPassword);
+        FormWrapper repeatPasswordField = new FormWrapper(true, "Powtórz Hasło", "Powtórz hasło", CheckData::arePasswordsMatching, passwordField);
+
+        passwordField.setSingleValidationMethod(null);
+        passwordField.setDoubleValidationMethod(CheckData::arePasswordsMatching, repeatPasswordField);
+
+        rootPanel.add(firstNameField);
+        rootPanel.add(secondNameField);
+        rootPanel.add(lastNameField);
+        rootPanel.add(emailField);
+        rootPanel.add(passwordField);
+        rootPanel.add(repeatPasswordField);
+        JButton registerButton;
+        registerButton = createRoundedButton("Utwórz konto", Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20));
+
+        registerButton.addActionListener(e -> {
+            boolean allValid = true;
+            allValid &= firstNameField.validateInput();
+            allValid &= secondNameField.validateInput();
+            allValid &= lastNameField.validateInput();
+            allValid &= emailField.validateInput();
+            allValid &= passwordField.validateInputWithRelatedField();
+            allValid &= repeatPasswordField.validateInputWithRelatedField();
+
+
+            if (allValid) {
+                User user = new RootUser(firstNameField.getValue(), secondNameField.getValue(), lastNameField.getValue(),
+                        emailField.getValue(), passwordField.getValue());
+                CentralDatabase.getInstance().addObject(User.class, user.getID(), user);
+                try {
+                    CentralDatabase.getInstance().saveAll();
+                    CentralDatabase.getInstance().loadAll();
+                    JOptionPane.showMessageDialog(rightBackPanel, "Wszystkie dane są poprawne!");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                CentralDatabase.getInstance().setCurrentUser(CentralDatabase.getInstance().FilterUser(emailField.getValue()));
+
+                SwingUtilities.invokeLater(() -> {
+                    ScreenUtil mainScreen = new MainScreen();
+                    mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser() == null ? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
+                });
+            } else {
+                element.setVisible(true);
+                rightLayers.revalidate();
+                rightLayers.repaint();
+            }
+
+        });
+
+        rootPanel.add(registerButton);
+
+        return rootPanel;
+    }
+
     private JPanel createUpperPanel() {
         upperContentPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
         upperContentPanel.setLayout(new BorderLayout());
@@ -131,7 +196,10 @@ public class RegisterScreen extends ScreenUtil {
         upperContentPanel.setPreferredSize(new Dimension(0, 80));
         JLabel titleLabel;
         if (userType == Users.BUSINESS_CUSTOMER) {
-            titleLabel = createLabel("Rejestracja Użytkownika Biznesowego", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
+            titleLabel = createLabel("Rejestracja Klienta Biznesowego", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
+        } else if (userType == Users.ROOT) {
+            titleLabel = createLabel("Rejestracja Administratora", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
+
         } else {
             titleLabel = createLabel("Rejestracja Użytkownika", new Font("SansSerif", Font.BOLD, 24), Color.WHITE);
 
@@ -185,10 +253,17 @@ public class RegisterScreen extends ScreenUtil {
                 (int) centralPanelDimension.height - createUpperPanel().getPreferredSize().height + 10));
 
         JPanel rightBackPanel = createRightBackPanel();
-        rightLayers.add(rightBackPanel, JLayeredPane.DEFAULT_LAYER);
+        if (userType != Users.ROOT) {
+            rightLayers.add(rightBackPanel, JLayeredPane.DEFAULT_LAYER);
+        }
+
         if (userType == Users.BUSINESS_CUSTOMER) {
             buissnesTogglePanel = createBuissnesTogglePanel();
             rightLayers.add(buissnesTogglePanel, JLayeredPane.DRAG_LAYER);
+        }
+
+        if (userType == Users.ROOT) {
+            rightLayers.add(createRootPanel(), 1000);
         }
         rightPanel.add(rightLayers);
 
@@ -264,10 +339,9 @@ public class RegisterScreen extends ScreenUtil {
 
             if (allValid) {
                 Customer user = new PrivateCustomer(
-                        String.valueOf(CentralDatabase.getInstance().getNextID(User.class, User.PRIVATE_C_PREFIX)),
                         firstNameField.getValue(), secondNameField.getValue(), lastNameField.getValue(),
-                        peselField.getValue(), postalCodeField.getValue(), cityField.getValue(), streetField.getValue(), emailField.getValue(), passwordField.getValue()
-                );
+                        peselField.getValue(), postalCodeField.getValue(), cityField.getValue(), streetField.getValue() + " " + houseNumberField.getValue(),
+                        emailField.getValue(), passwordField.getValue());
                 if (userType == Users.BUSINESS_CUSTOMER) {
                     tempUser = user;
                     buissnesTogglePanel.setVisible(true);
