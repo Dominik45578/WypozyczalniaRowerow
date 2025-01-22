@@ -1,11 +1,14 @@
 package dataclass.user;
 
+import dataclass.fileoperations.CentralDatabase;
+import dataclass.rental.RentalServices;
 import dataclass.rental.RentalTransaction;
 import dataclass.vehicle.Vehicle;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class Customer implements User, Serializable {
 
@@ -17,23 +20,22 @@ public abstract class Customer implements User, Serializable {
     protected String firstName;
     protected String secondName;
     protected String lastName;
-    protected int numberOfRentedItems;
     protected String email;
     protected String phoneNumber;
     protected String password;
+    protected float saldo;
+
     protected Map<String, Vehicle> rentedItems = new HashMap<>();
-    protected Map<String, RentalTransaction> rentedHistory = new HashMap<>();
 
     public Customer() {
-        this("C000", "Dominik", "Michał", "Koralik", "0429265555",
-                "31-866", "Kraków", "Skarżyńskiego 9", "dkkd3046@gmail.com","Dominik456");
+        this("Dominik", "Michał", "Koralik", "0429265555",
+                "31-866", "Kraków", "Skarżyńskiego 9", "dkkd3046@gmail.com", "Dominik456");
     }
 
-    public Customer(String customerId, String firstName, String secondName,
+    public Customer(String firstName, String secondName,
                     String lastName, String pesel, String postalCode, String city,
                     String address, String email, String password) {
         this.secondName = secondName;
-        this.customerId = customerId;
         this.pesel = pesel;
         this.address = address;
         this.postalCode = postalCode;
@@ -42,11 +44,25 @@ public abstract class Customer implements User, Serializable {
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        numberOfRentedItems = 0;
         this.phoneNumber = "Brak";
+        this.saldo = 0;
     }
 
-    // Implementacja metod z interfejsu CustomerDetails
+    public float getSaldo() {
+        return saldo;
+    }
+
+    public String getSaldoString() {
+        return String.valueOf(saldo);
+    }
+
+    public void addToSaldo(float saldo) {
+        this.saldo += saldo;
+    }
+
+    public void addToSaldoString(String saldo) {
+        this.saldo += Integer.parseInt(saldo);
+    }
 
     public String getPesel() {
         return pesel;
@@ -138,11 +154,6 @@ public abstract class Customer implements User, Serializable {
     }
 
     @Override
-    public void setNumberOfRentedItems(int numberOfRentedItems) {
-        this.numberOfRentedItems = numberOfRentedItems;
-    }
-
-    @Override
     public String getEmail() {
         return email;
     }
@@ -164,32 +175,51 @@ public abstract class Customer implements User, Serializable {
 
     @Override
     public Map<String, RentalTransaction> getRentedHistory() {
-        return rentedHistory;
+        // Pobranie wszystkich transakcji z pamięci podręcznej
+        Map<String, RentalTransaction> allTransactions = (Map<String, RentalTransaction>) CentralDatabase.getInstance()
+                .getCachedData()
+                .get(RentalTransaction.class);
+
+        // Filtrowanie transakcji po ID użytkownika
+        return allTransactions.entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().getUser().getID().equals(this.customerId))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @Override
-    public void setRentedHistory(Map<String, RentalTransaction> rentedHistory) {
-        this.rentedHistory = rentedHistory;
-    }
-
-    @Override
-    public void rentItem(String itemId, Vehicle vehicle) {
+    public boolean rentItem(String itemId, Vehicle vehicle) {
+        if (rentedItems.containsKey(itemId)) {
+            return false;
+        }
         rentedItems.put(itemId, vehicle);
+        return true;
     }
 
     @Override
-    public void returnItem(String itemId) {
-        rentedItems.remove(itemId);
-        rentedHistory.get(itemId).endRental();
-    }
-
-    @Override
-    public void removeRentedItem(String itemId) {
-
+    public boolean returnItem(String itemId) {
+        RentalTransaction t = (RentalTransaction) CentralDatabase.getInstance().getCachedData().get(RentalTransaction.class).get(itemId);
+        rentedItems.remove(t.getVehicle().getVehicleId());
+        return true;
     }
 
     @Override
     public String toString() {
         return email + " " + firstName;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public String getID() {
+        return customerId;
+    }
+
+    @Override
+    public void removeRentedItem(String itemId) {
+        rentedItems.remove(itemId);
     }
 }

@@ -3,18 +3,16 @@ package dataclass.vehicle;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class VehicleBrand implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
     private final String name;
-    private final List<VehicleModel> models = new ArrayList<>();
+    private final Map<String , VehicleModel> models = new HashMap<>();
 
-    public VehicleBrand(String name, List<VehicleModel> models){
-        this.name = name;
-        this.models.addAll(models);
-    }
 
     public VehicleBrand(String name) {
         this.name = name;
@@ -23,21 +21,16 @@ public class VehicleBrand implements Serializable {
         return name;
     }
 
-    public List<VehicleModel> getModels() {
+    public Map<String,VehicleModel> getModels() {
         return models;
     }
 
     public void addModel(VehicleModel model) {
-        models.add(model);
+        models.put(model.model(), model);
     }
-    public void addModelFromList(List<VehicleModel> model) {
-        if(!models.isEmpty()) {
-            models.addAll(model);
-        }
+    public void addModelFromList(Map<String,VehicleModel> model) {
+        models.putAll(model);
+
     }
 
-    @Override
-    public String toString() {
-        return "Brand: " + name + ", Models: " + models;
-    }
 }

@@ -153,5 +153,11 @@ public class CheckData {
     public static boolean isValidNIP(String nip) {
         return nip != null && nip.matches("\\d{10}");
     }
+    public static boolean isValidSecondName(String name){
+        if(name.isEmpty()){
+            return true;
+        }
+        else return isValidName(name);
+    }
 }
 

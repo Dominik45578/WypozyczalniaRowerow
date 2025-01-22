@@ -3,6 +3,7 @@ package dataclass.rental;
 import dataclass.fileoperations.CentralDatabase;
 import dataclass.user.BusinessCustomer;
 import dataclass.user.Customer;
+import dataclass.user.Employee;
 import dataclass.user.User;
 import dataclass.vehicle.SingleTrackVehicle;
 import dataclass.vehicle.Vehicle;
@@ -92,6 +93,11 @@ public class RentalServices implements RentalService {
             database.addObject(Vehicle.class, vehicleId, vehicle);
             database.addObject(User.class, user.getID(), user);
             database.addObject(RentalTransaction.class, t.getTransactionID(), t);
+            if(user instanceof Employee){
+                Employee e = (Employee) user;
+                e.getEmployer().addEmployee(e.getID(),e);
+                database.addObject(User.class, e.getEmployer().getID(), e.getEmployer());
+            }
 
             return true;
         }
@@ -105,8 +111,12 @@ public class RentalServices implements RentalService {
             System.out.println("Zwrot :" + vehicleId);
             User user = vehicle.getRenter();
             RentalTransaction t = findActiveTransactionByVehicleId(vehicleId);
-            user.returnItem(t.getTransactionID());
-            vehicle.returnVehicle();
+            if (user.returnItem(t.getTransactionID())) {
+                vehicle.returnVehicle();
+                t.endRental();
+                System.out.println("Zwrócono pomyslnie");
+            }
+
             database.addObject(Vehicle.class, vehicleId, vehicle);
             database.addObject(User.class, user.getID(), user);
             database.addObject(RentalTransaction.class, t.getTransactionID(), t);
@@ -210,6 +220,34 @@ public class RentalServices implements RentalService {
             }
         }
         return null;
+    }
+
+    public int getNumberOfActiveTransaction() {
+        Map<String, RentalTransaction> transactionsMap =
+                (Map<String, RentalTransaction>) database.getCachedData().get(RentalTransaction.class);
+
+        if (transactionsMap != null) {
+            return (int) transactionsMap.values().stream()
+                    .filter((RentalTransaction::isActive))
+                    .count();
+        }
+        return 0;
+    }
+
+    public int getAllNumberOfTransactions() {
+        return database.getCachedData().get(RentalTransaction.class).keySet().size();
+    }
+
+    public int getNumberOfUsers() {
+        return database.getCachedData().get(User.class).keySet().size();
+    }
+
+    public int getNumberOfVehicle() {
+        return database.getCachedData().get(Vehicle.class).keySet().size();
+    }
+
+    public int getNumberOfVehicleBrand() {
+        return database.getCachedData().get(VehicleBrand.class).keySet().size();
     }
 
 }

@@ -21,10 +21,4 @@ public class ItemInfoScreen extends JFrame implements Screen{
         // Ustawienie rozmiaru okna JFrame
         this.setVisible(true);
     }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            ItemInfoScreen iis = new ItemInfoScreen(new SingleTrackVehicle());
-        });
-    }
 }

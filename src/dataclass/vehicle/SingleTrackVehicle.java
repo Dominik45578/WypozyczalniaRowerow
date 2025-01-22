@@ -16,23 +16,33 @@ public class SingleTrackVehicle implements Vehicle , Serializable {
     public static final String BROKEN ="broken";
     public static final String OCCUPIED ="occupied";
     public static final String FREE ="free";
+    public static final String BIKE = "Rower";
+    public static final String EBIKE = "Rower Elektryczny";
+    public static final String ESCOOTER = "Hulajnoga Elektryczna";
+    public static final String MTB = "Górski";
+    public static final String SZOSA = "Szosowy";
+    public static final String MIASTO = "Miejski";
 
-    private boolean rented;
-    private User renter;
-    private final String vehicleType;
-    private final String vehicleModel;
-    private final String vehicleId;
-    private String status;
 
 
-    // Constructor
-    public SingleTrackVehicle(){
-        this("D001","Rower","Glowrer");
-    }
-    public SingleTrackVehicle(String vehicleId, String vehicleName, String vehicleModel) {
-        this.vehicleId = vehicleId;
-        this.vehicleType = vehicleName;
+
+
+    protected boolean rented;
+    protected User renter;
+    protected String vehicleType;
+    protected final VehicleBrand vehicleBrand;
+    protected final VehicleModel vehicleModel;
+    protected String vehicleId;
+    protected String status;
+    protected float price;
+    protected String type;
+
+
+
+    public SingleTrackVehicle(String  type ,VehicleBrand vehicleBrand, VehicleModel vehicleModel) {
         this.vehicleModel = vehicleModel;
+        this.vehicleBrand = vehicleBrand;
+        this.type = type;
         this.rented = false;
         this.renter = null;
     }
@@ -48,6 +58,16 @@ public class SingleTrackVehicle implements Vehicle , Serializable {
     @Override
     public boolean isRented() {
         return rented;
+    }
+
+    @Override
+    public float getPrice() {
+        return price;
+    }
+
+    @Override
+    public void setPrice(float price) {
+        this.price = price;
     }
 
     @Override
@@ -67,7 +87,7 @@ public class SingleTrackVehicle implements Vehicle , Serializable {
 
     @Override
     public String getVehicleModel() {
-        return vehicleModel;
+        return vehicleModel.model();
     }
 
     // Set renter and update rented status
@@ -76,6 +96,21 @@ public class SingleTrackVehicle implements Vehicle , Serializable {
         this.renter = user;
         this.rented = true;
         this.status = OCCUPIED;
+    }
+
+    @Override
+    public String getVehicleBrandToString() {
+        return vehicleBrand.getName();
+    }
+
+    @Override
+    public VehicleBrand getVehicleBrand() {
+        return vehicleBrand;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     // Clear renter and update rented status

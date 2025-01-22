@@ -1,6 +1,8 @@
 package layout;
 
 import dataclass.fileoperations.CentralDatabase;
+import dataclass.fileoperations.CheckData;
+import dataclass.rental.RentalServices;
 import dataclass.rental.RentalTransaction;
 import dataclass.user.*;
 import dataclass.vehicle.*;
@@ -8,6 +10,8 @@ import dataclass.vehicle.*;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
@@ -53,7 +57,7 @@ public class MainScreen extends ScreenUtil {
 
 
     MainScreen() {
-        super("Guckor Bike Rental - Login", 1400, 800);
+        super("Guckor Bike Rental - Login", 1500, 850);
         instance = this;
         lastElement = -1;
         customer = CentralDatabase.getInstance().getCurrentUser();
@@ -178,11 +182,11 @@ public class MainScreen extends ScreenUtil {
 
         addMenuListener(settingsOption, this::createSettingsPanel);
         addMenuListener(searchOption, this::createSearchPanel);
-        addMenuListener(homeOption, this::createHomePage);
+        addMenuListener(homeOption,
+                CentralDatabase.getInstance().getCurrentUser().getUserType().equals(Users.ROOT) ? this::createAdminPanel : this::createHomePage);
         addMenuListener(statsOption, this::createStatsPanel);
-        addMenuListener(historyOption, this::createHistoryPanel);
-
-
+        addMenuListener(historyOption,
+                CentralDatabase.getInstance().getCurrentUser().getUserType().equals(Users.ROOT) ? this::createHistoryRootPanel : this::createHistoryPanel);
         leftPanel.add(homeOption);
         leftPanel.add(searchOption);
         leftPanel.add(historyOption);
@@ -260,15 +264,491 @@ public class MainScreen extends ScreenUtil {
         worker.execute();
     }
 
-    public void createHomePage() {
+    private void createHomePage() {
+        if (customer instanceof BusinessCustomer) {
+            createHomePageForBusiness();
+        }
+    }
+
+    public void createHomePageForBusiness() {
+        // Główny panel z BorderLayout
         JPanel statsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
         changeLastElement(MenuOptionPosition.STATS.getIndex());
         statsPanel.setPreferredSize(layers.getPreferredSize());
+        statsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        statsPanel.setLayout(new BorderLayout(10, 10));
+
+        // Panel na dynamiczną treść
+        JPanel contentPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        contentPanel.setLayout(new BorderLayout());
+        contentPanel.setPreferredSize(new Dimension(
+                layers.getPreferredSize().width - 20,
+                layers.getPreferredSize().height - 150
+        ));
+
+        // Panel przycisków na górze
+        JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        buttonPanel.setOpaque(false);
+
+        // Przycisk "Wyświetl pracowników"
+        JButton showEmployeesButton = createRoundedButton("Wyświetl pracowników", 20);
+        showEmployeesButton.addActionListener(e -> {
+            // Wyświetlanie listy pracowników
+            createEmployeeListPanel(contentPanel);
+        });
+        buttonPanel.add(showEmployeesButton);
+
+        // Przycisk "Dodaj pracownika"
+        JButton addEmployeeButton = createRoundedButton("Dodaj pracownika", 20);
+        addEmployeeButton.addActionListener(e -> {
+            // Wyświetlanie formularza dodawania pracownika
+            contentPanel.removeAll();
+            contentPanel.add(createEmployeeInputPanel(), BorderLayout.CENTER);
+            contentPanel.revalidate();
+            contentPanel.repaint();
+        });
+        buttonPanel.add(addEmployeeButton);
+
+        statsPanel.add(buttonPanel, BorderLayout.NORTH);
+
+        // Dodanie panelu centralnego na dynamiczną treść
+        statsPanel.add(contentPanel, BorderLayout.CENTER);
+
+        // Panel nawigacyjny na dole (opcjonalny)
+        JPanel navigationPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        navigationPanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 20, 10));
+        statsPanel.add(navigationPanel, BorderLayout.SOUTH);
+
+        // Aktualizacja głównej warstwy
         updateLayerContent(statsPanel);
     }
 
+
+    private void createEmployeeListPanel(JPanel contentPanel) {
+        // Czyszczenie panelu centralnego
+        contentPanel.removeAll();
+
+        // Pobieranie pracowników z bazy danych
+        BusinessCustomer customer = (BusinessCustomer) CentralDatabase.getInstance().getCurrentUser();
+        Map<String, Employee> employeeMap = customer.getEmployees();
+
+
+        // Panel dla listy pracowników
+        JPanel employeesPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        employeesPanel.setLayout(new GridLayout(7, 1, 10, 10));
+        employeesPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        employeeMap.values().forEach(employee -> {
+            EditiableEmployeeViewPanel employeePanel = new EditiableEmployeeViewPanel(employee);
+            employeePanel.setMaximumSize(new Dimension(layers.getPreferredSize().width - 50, 100));
+            employeesPanel.add(employeePanel);
+            employeesPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Odstęp między panelami
+        });
+
+        // Dodanie panelu przewijanego do centralnego
+        contentPanel.add(employeesPanel, BorderLayout.CENTER);
+
+        // Odświeżanie panelu
+        contentPanel.revalidate();
+        contentPanel.repaint();
+    }
+
+
+    private JPanel createEmployeeInputPanel() {
+        JPanel panel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        panel.setLayout(new GridLayout(5, 3, 10, 10));
+
+        FormWrapper firstNameField = new FormWrapper("Pierwsze imię", "Wpisz imię", CheckData::isValidName);
+        FormWrapper secondNameField = new FormWrapper("Drugie imię", "Wpisz drugie imię", CheckData::isValidSecondName);
+        FormWrapper lastNameField = new FormWrapper("Nazwisko", "Wpisz nazwisko", CheckData::isValidName);
+        FormWrapper birthDateField = new FormWrapper("Data urodzenia", "DD-MM-YYYY", CheckData::isValidDate);
+        FormWrapper peselField = new FormWrapper(true, "PESEL", "Wpisz PESEL", CheckData::isValidPesel);
+        FormWrapper streetField = new FormWrapper("Ulica", "Wpisz ulicę", CheckData::isValidAdres);
+        FormWrapper postalCodeField = new FormWrapper("Kod pocztowy", "Wpisz kod pocztowy", CheckData::isValidPostalCode);
+        FormWrapper houseNumberField = new FormWrapper("Numer domu", "Wpisz numer domu", CheckData::isValidHouseNumber);
+        FormWrapper cityField = new FormWrapper("Miejscowość", "Wpisz miejscowość", CheckData::isValidName);
+        FormWrapper emailField = new FormWrapper("Email", "Wpisz email", CheckData::isValidEmail);
+        FormWrapper passwordField = new FormWrapper(true, "Hasło", "Wpisz hasło", CheckData::isValidPassword);
+        FormWrapper repeatPasswordField = new FormWrapper(true, "Powtórz Hasło", "Powtórz hasło", CheckData::arePasswordsMatching, passwordField);
+
+        passwordField.setSingleValidationMethod(null);
+        passwordField.setDoubleValidationMethod(CheckData::arePasswordsMatching, repeatPasswordField);
+
+        panel.add(firstNameField);
+        panel.add(secondNameField);
+        panel.add(lastNameField);
+        panel.add(birthDateField);
+        panel.add(peselField);
+        panel.add(cityField);
+        panel.add(streetField);
+        panel.add(houseNumberField);
+        panel.add(postalCodeField);
+        panel.add(emailField);
+        panel.add(passwordField);
+        panel.add(repeatPasswordField);
+        JButton registerButton;
+        registerButton = createRoundedButton("Dalej ->", Colors.DARK_BLUE_ACTIVE.getColor(), Color.WHITE, new Font("SansSerif", Font.PLAIN, 20));
+        panel.add(new JLabel());
+        panel.add(registerButton);
+        registerButton.addActionListener(e -> {
+            boolean allValid = true;
+            allValid &= firstNameField.validateInput();
+            allValid &= secondNameField.validateInput();
+            allValid &= lastNameField.validateInput();
+            allValid &= birthDateField.validateInput();
+            allValid &= peselField.validateInput();
+            allValid &= streetField.validateInput();
+            allValid &= postalCodeField.validateInput();
+            allValid &= houseNumberField.validateInput();
+            allValid &= cityField.validateInput();
+            allValid &= emailField.validateInput();
+            allValid &= passwordField.validateInputWithRelatedField();
+            allValid &= repeatPasswordField.validateInputWithRelatedField();
+
+
+            if (allValid) {
+                Employee user = new Employee(
+                        firstNameField.getValue(), secondNameField.getValue(), lastNameField.getValue(),
+                        peselField.getValue(), postalCodeField.getValue(), cityField.getValue(), streetField.getValue() + " " + houseNumberField.getValue(),
+                        emailField.getValue(), passwordField.getValue());
+                BusinessCustomer customer = (BusinessCustomer) CentralDatabase.getInstance().getCurrentUser();
+                user.setEmployer(customer);
+                customer.addEmployee(user.getID(), user);
+
+                CentralDatabase.getInstance().addObject(User.class, user.getID(), user);
+                CentralDatabase.getInstance().addObject(User.class, customer.getID(), customer);
+                try {
+                    CentralDatabase.getInstance().saveAll();
+                    CentralDatabase.getInstance().loadAll();
+                    JOptionPane.showMessageDialog(rightBackPanel, "Wszystkie dane są poprawne!");
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+                SwingUtilities.invokeLater(() -> {
+                    updateLayerContent(createEmployeeInputPanel());
+                });
+            } else {
+                JOptionPane.showMessageDialog(panel, "Nie wszystkie dane są poprawne !");
+            }
+
+        });
+        return panel;
+    }
+
+
+    protected JPanel adminInfoPanel;
+
+    private void createAdminPanel() {
+        createRoundedPanel(Colors.BACKGROUND.getColor());
+        if (adminInfoPanel == null) {
+            adminInfoPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+            adminInfoPanel.setLayout(new BorderLayout(10, 10));
+        }
+        adminInfoPanel.removeAll();
+
+        // Panel z przyciskami u góry
+        JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
+
+        JButton addBikeButton = createRoundedButton("Dodaj Rower", 20);
+        JButton addElectricBikeButton = createRoundedButton("Dodaj Rower Elektryczny", 20);
+        JButton addScooterButton = createRoundedButton("Dodaj Hulajnogę", 20);
+        JButton removeVehicleButton = createRoundedButton("Usuń pojazd", 20);
+        JButton addBrandButton = createRoundedButton("Dodaj Markę", 20);
+        JButton addModelButton = createRoundedButton("Dodaj Model", 20);
+
+        buttonPanel.add(addBikeButton);
+        buttonPanel.add(addElectricBikeButton);
+        buttonPanel.add(addScooterButton);
+        buttonPanel.add(removeVehicleButton);
+        buttonPanel.add(addBrandButton);
+        buttonPanel.add(addModelButton);
+
+        adminInfoPanel.add(buttonPanel, BorderLayout.NORTH);
+
+        // Panel środkowy
+        JPanel centerPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        adminInfoPanel.add(centerPanel, BorderLayout.CENTER);
+
+        // Obsługa akcji dla przycisków
+        addBikeButton.addActionListener(e -> updateCenterPanel(centerPanel, 1));
+        addElectricBikeButton.addActionListener(e -> updateCenterPanel(centerPanel, 2));
+        addScooterButton.addActionListener(e -> updateCenterPanel(centerPanel, 3));
+
+        removeVehicleButton.addActionListener(e -> {
+            JComboBox<String> vehicleComboBox = new JComboBox<>();
+            Map<String, Vehicle> vehicles = (Map<String, Vehicle>) CentralDatabase.getInstance().getCachedData().get(Vehicle.class);
+            for (String vehicleId : vehicles.keySet()) {
+                Vehicle vehicle = vehicles.get(vehicleId);
+                if (!vehicle.isRented()) {
+                    vehicleComboBox.addItem(vehicleId);
+                }
+            }
+
+            JPanel inputPanel = new JPanel(new GridLayout(1, 2));
+            inputPanel.add(new JLabel("Wybierz pojazd do usunięcia:"));
+            inputPanel.add(vehicleComboBox);
+
+            int result = JOptionPane.showConfirmDialog(adminInfoPanel, inputPanel, "Usuń pojazd", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                String selectedVehicleId = (String) vehicleComboBox.getSelectedItem();
+                if (selectedVehicleId != null && vehicles.containsKey(selectedVehicleId)) {
+                    RentalServices.getInstance().returnVehicle(selectedVehicleId);
+                    JOptionPane.showMessageDialog(adminInfoPanel, "Pojazd o ID " + selectedVehicleId + " został usunięty.", "Sukces", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(adminInfoPanel, "Nie wybrano prawidłowego pojazdu.", "Błąd", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        addBrandButton.addActionListener(e -> {
+            JTextField brandField = new JTextField(10);
+            JTextField modelField = new JTextField(10);
+            JPanel inputPanel = new JPanel(new GridLayout(2, 2));
+            inputPanel.add(new JLabel("Nazwa Marki:"));
+            inputPanel.add(brandField);
+            inputPanel.add(new JLabel("Pierwszy Model:"));
+            inputPanel.add(modelField);
+
+            int result = JOptionPane.showConfirmDialog(adminInfoPanel, inputPanel, "Dodaj Nową Markę", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                String brandName = brandField.getText().trim();
+                String modelName = modelField.getText().trim();
+
+                if (!brandName.isEmpty() && !modelName.isEmpty()) {
+                    VehicleBrand newBrand = new VehicleBrand(brandName);
+                    newBrand.addModel(new VehicleModel(modelName));
+                    CentralDatabase.getInstance().addObject(VehicleBrand.class, brandName, newBrand);
+                    JOptionPane.showMessageDialog(adminInfoPanel, "Dodano nową markę: " + brandName, "Sukces", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(adminInfoPanel, "Proszę uzupełnić wszystkie pola!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        addModelButton.addActionListener(e -> {
+            JComboBox<String> brandComboBox = new JComboBox<>();
+            JTextField modelField = new JTextField(10);
+
+            Map<String, VehicleBrand> brands = (Map<String, VehicleBrand>) CentralDatabase.getInstance().getCachedData().get(VehicleBrand.class);
+            for (String brandName : brands.keySet()) {
+                brandComboBox.addItem(brandName);
+            }
+
+            JPanel inputPanel = new JPanel(new GridLayout(2, 2));
+            inputPanel.add(new JLabel("Wybierz Markę:"));
+            inputPanel.add(brandComboBox);
+            inputPanel.add(new JLabel("Nowy Model:"));
+            inputPanel.add(modelField);
+
+            int result = JOptionPane.showConfirmDialog(adminInfoPanel, inputPanel, "Dodaj Nowy Model", JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.OK_OPTION) {
+                String selectedBrand = (String) brandComboBox.getSelectedItem();
+                String modelName = modelField.getText().trim();
+
+                if (selectedBrand != null && !modelName.isEmpty()) {
+                    VehicleBrand brand = brands.get(selectedBrand);
+                    if (brand != null) {
+                        brand.addModel(new VehicleModel(modelName));
+                        CentralDatabase.getInstance().addObject(VehicleBrand.class,brand.getName(),brand);
+                        JOptionPane.showMessageDialog(adminInfoPanel, "Dodano nowy model: " + modelName + " do marki: " + selectedBrand, "Sukces", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(adminInfoPanel, "Proszę uzupełnić wszystkie pola!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        // Aktualizacja zawartości panelu bazowego
+        updateLayerContent(adminInfoPanel);
+    }
+
+    private void updateCenterPanel(JPanel centerPanel, int option) {
+        centerPanel.removeAll();
+
+        // Wspólne komponenty
+        JLabel titleLabel = new JLabel();
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel typeLabel = new JLabel("Typ:");
+        typeLabel.setForeground(Color.WHITE);
+        JComboBox<String> typeComboBox = new JComboBox<>(new String[]{
+                SingleTrackVehicle.MTB,
+                SingleTrackVehicle.SZOSA,
+                SingleTrackVehicle.MIASTO
+        });
+
+        JLabel brandLabel = new JLabel("Marka:");
+        brandLabel.setForeground(Color.WHITE);
+        JComboBox<String> brandComboBox = new JComboBox<>();
+        Map<String, VehicleBrand> brands = (Map<String, VehicleBrand>) CentralDatabase.getInstance().getCachedData().get(VehicleBrand.class);
+        for (String brandName : brands.keySet()) {
+            brandComboBox.addItem(brandName);
+        }
+
+        JLabel modelLabel = new JLabel("Model:");
+        modelLabel.setForeground(Color.WHITE);
+        JComboBox<String> modelComboBox = new JComboBox<>();
+        brandComboBox.addActionListener(e -> {
+            String selectedBrand = (String) brandComboBox.getSelectedItem();
+            modelComboBox.removeAllItems();
+            if (selectedBrand != null) {
+                VehicleBrand brand = brands.get(selectedBrand);
+                for (String modelName : brand.getModels().keySet()) {
+                    modelComboBox.addItem(modelName);
+                }
+            }
+        });
+
+        JLabel priceLabel = new JLabel("Cena:");
+        priceLabel.setForeground(Color.WHITE);
+        JTextField priceField = new JTextField(10);
+
+        JLabel batteryLevelLabel = new JLabel("Poziom baterii:");
+        batteryLevelLabel.setForeground(Color.WHITE);
+        JTextField batteryLevelField = new JTextField(10);
+        batteryLevelLabel.setVisible(false);
+        batteryLevelField.setVisible(false);
+
+        JCheckBox basketCheckBox = new JCheckBox("Koszyk");
+        basketCheckBox.setForeground(Color.WHITE);
+        basketCheckBox.setBackground(Colors.DARK_BLUE.getColor());
+        basketCheckBox.setVisible(false);
+
+        JCheckBox kidsFriendlyCheckBox = new JCheckBox("Dla dzieci");
+        kidsFriendlyCheckBox.setForeground(Color.WHITE);
+        kidsFriendlyCheckBox.setBackground(Colors.DARK_BLUE.getColor());
+        kidsFriendlyCheckBox.setVisible(false);
+
+        JButton addButton = createRoundedButton("Dodaj", 20);
+        addButton.setVisible(false);
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        inputPanel.setBackground(Colors.DARK_BLUE.getColor());
+        inputPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        inputPanel.add(typeLabel);
+        inputPanel.add(typeComboBox);
+        inputPanel.add(brandLabel);
+        inputPanel.add(brandComboBox);
+        inputPanel.add(modelLabel);
+        inputPanel.add(modelComboBox);
+        inputPanel.add(priceLabel);
+        inputPanel.add(priceField);
+        inputPanel.add(batteryLevelLabel);
+        inputPanel.add(batteryLevelField);
+        inputPanel.add(basketCheckBox);
+        inputPanel.add(kidsFriendlyCheckBox);
+        inputPanel.add(addButton);
+
+        switch (option) {
+            case 1: // Menu dodawania roweru
+                titleLabel.setText("Dodawanie Roweru");
+                basketCheckBox.setVisible(true);
+                kidsFriendlyCheckBox.setVisible(true);
+                addButton.setVisible(true);
+
+                addButton.addActionListener(e -> {
+                    String selectedType = (String) typeComboBox.getSelectedItem();
+                    String selectedBrand = (String) brandComboBox.getSelectedItem();
+                    String selectedModel = (String) modelComboBox.getSelectedItem();
+                    boolean hasBasket = basketCheckBox.isSelected();
+                    boolean isKidsFriendly = kidsFriendlyCheckBox.isSelected();
+                    String price = priceField.getText();
+
+                    if (selectedType != null && selectedBrand != null && selectedModel != null && !price.isEmpty()) {
+                        Bike bike = new Bike(selectedType, brands.get(selectedBrand), brands.get(selectedBrand).getModels().get(selectedModel), hasBasket, isKidsFriendly);
+                        bike.setPrice(Integer.parseInt(price));
+                        CentralDatabase.getInstance().addObject(Vehicle.class, bike.getVehicleId(), bike);
+
+                        updateCenterPanel(centerPanel, 0); // Powrót do menu głównego po dodaniu
+                    } else {
+                        JOptionPane.showMessageDialog(centerPanel, "Proszę uzupełnić wszystkie pola!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+                break;
+
+            case 2: // Menu dodawania eBike
+                titleLabel.setText("Dodawanie eBike");
+                batteryLevelLabel.setVisible(true);
+                batteryLevelField.setVisible(true);
+                addButton.setVisible(true);
+
+                addButton.addActionListener(e -> {
+                    String selectedType = (String) typeComboBox.getSelectedItem();
+                    String selectedBrand = (String) brandComboBox.getSelectedItem();
+                    String selectedModel = (String) modelComboBox.getSelectedItem();
+                    String price = priceField.getText();
+                    String batteryLevel = batteryLevelField.getText();
+
+                    if (selectedType != null && selectedBrand != null && selectedModel != null && !price.isEmpty() && !batteryLevel.isEmpty()) {
+                        EBike ebike = new EBike(selectedType, brands.get(selectedBrand), brands.get(selectedBrand).getModels().get(selectedModel), Integer.parseInt(batteryLevel));
+                        System.out.printf("Dodano eBike: Typ=%s, Marka=%s, Model=%s, Poziom baterii=%s, Cena=%s\n",
+                                selectedType, selectedBrand, selectedModel,
+                                batteryLevel, price);
+                        ebike.setPrice(Integer.parseInt(price));
+
+                        CentralDatabase.getInstance().addObject(Vehicle.class, ebike.getVehicleId(), ebike);
+
+                        updateCenterPanel(centerPanel, 0); // Powrót do menu głównego po dodaniu
+                    } else {
+                        JOptionPane.showMessageDialog(centerPanel, "Proszę uzupełnić wszystkie pola!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+                break;
+            case 3:
+                titleLabel.setText("Dodawanie Hulajnogi");
+                batteryLevelLabel.setVisible(true);
+                batteryLevelField.setVisible(true);
+                addButton.setVisible(true);
+
+                addButton.addActionListener(e -> {
+                    String selectedType = (String) typeComboBox.getSelectedItem();
+                    String selectedBrand = (String) brandComboBox.getSelectedItem();
+                    String selectedModel = (String) modelComboBox.getSelectedItem();
+                    String price = priceField.getText();
+                    String batteryLevel = batteryLevelField.getText();
+
+                    if (selectedType != null && selectedBrand != null && selectedModel != null && !price.isEmpty() && !batteryLevel.isEmpty()) {
+                        Vehicle scooter = new Scooter(selectedType, brands.get(selectedBrand), brands.get(selectedBrand).getModels().get(selectedModel), Integer.parseInt(batteryLevel)) {
+                        };
+                        scooter.setPrice(Integer.parseInt(price));
+
+                        CentralDatabase.getInstance().addObject(Vehicle.class, scooter.getVehicleId(), scooter);
+
+                        updateCenterPanel(centerPanel, 0); // Powrót do menu głównego po dodaniu
+                    } else {
+                        JOptionPane.showMessageDialog(centerPanel, "Proszę uzupełnić wszystkie pola!", "Błąd", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+
+
+            default:
+                titleLabel.setText("Wybierz opcję z menu powyżej.");
+                break;
+        }
+
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        centerPanel.add(titleLabel);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        centerPanel.add(inputPanel);
+
+        centerPanel.revalidate();
+        centerPanel.repaint();
+
+        // Aktualizacja adminInfoPanel po zmianach w centerPanel
+        updateLayerContent(adminInfoPanel);
+    }
+
+
     private int currentPage = 0; // Numer aktualnej strony
-    private static final int TRANSACTIONS_PER_PAGE = 8; // Liczba transakcji na stronę
+    private static final int TRANSACTIONS_PER_PAGE = 10; // Liczba transakcji na stronę
 
     public void createHistoryPanel() {
         // Główny panel z BorderLayout
@@ -290,7 +770,7 @@ public class MainScreen extends ScreenUtil {
 
         // Panel transakcji w centrum
         JPanel transactionsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
-        transactionsPanel.setLayout(new GridLayout(4, 2, 10, 10)); // 4 rzędy, 2 kolumny
+        transactionsPanel.setLayout(new GridLayout(5, 2, 10, 10)); // 4 rzędy, 2 kolumny
 
         // Dodawanie transakcji do panelu
         for (int i = startIndex; i < endIndex; i++) {
@@ -309,7 +789,7 @@ public class MainScreen extends ScreenUtil {
         buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 0));
         buttonPanel.setOpaque(false);
         JButton previousButton = createRoundedButton("<- Nowsze", 20);
-         previousButton.setVisible(false);
+        previousButton.setVisible(false);
         if (currentPageSearch > 0) {
             previousButton.setVisible(true);
 
@@ -330,7 +810,7 @@ public class MainScreen extends ScreenUtil {
             });
 
         }
-         buttonPanel.add(nextButton);
+        buttonPanel.add(nextButton);
 
         navigationPanel.add(buttonPanel, BorderLayout.WEST);
 
@@ -348,6 +828,85 @@ public class MainScreen extends ScreenUtil {
         updateLayerContent(historyPanel);
     }
 
+    private static final int TRANSACTIONS_PER_PAGE_ROOT = 8;
+
+    public void createHistoryRootPanel() {
+        // Główny panel z BorderLayout
+        JPanel historyPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        historyPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        historyPanel.setLayout(new BorderLayout(10, 10));
+
+        // Pobieramy historię wypożyczeń użytkownika i sortujemy transakcje
+        Map<String, RentalTransaction> transactions = (Map<String, RentalTransaction>) CentralDatabase.getInstance().getCachedData().get(RentalTransaction.class);
+        List<RentalTransaction> transactionList = new ArrayList<>(transactions.values());
+
+        // Sortowanie: aktywne na początku
+        transactionList.sort((t1, t2) -> Boolean.compare(!t1.isActive(), !t2.isActive()));
+
+        int totalTransactions = transactionList.size();
+        int totalPages = (int) Math.ceil((double) totalTransactions / TRANSACTIONS_PER_PAGE_ROOT); // Całkowita liczba stron
+        int startIndex = currentPageSearch * TRANSACTIONS_PER_PAGE_ROOT; // Indeks początkowy dla bieżącej strony
+        int endIndex = Math.min(startIndex + TRANSACTIONS_PER_PAGE_ROOT, totalTransactions); // Indeks końcowy
+
+        // Panel transakcji w centrum
+        JPanel transactionsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        transactionsPanel.setLayout(new GridLayout(TRANSACTIONS_PER_PAGE_ROOT / 2, 2, 10, 10)); // 4 rzędy, 2 kolumny
+
+        // Dodawanie transakcji do panelu
+        for (int i = startIndex; i < endIndex; i++) {
+            RentalTransaction transaction = transactionList.get(i);
+            JPanel transactionPanel = new TransactionField(transaction);
+            transactionsPanel.add(transactionPanel);
+        }
+        historyPanel.add(transactionsPanel, BorderLayout.CENTER);
+
+        // Panel nawigacyjny na dole
+        JPanel navigationPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        navigationPanel.setLayout(new BorderLayout());
+
+        // Panel przycisków nawigacyjnych (po lewej stronie)
+        JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 0));
+        buttonPanel.setOpaque(false);
+        JButton previousButton = createRoundedButton("<- Nowsze", 20);
+        previousButton.setVisible(false);
+        if (currentPageSearch > 0) {
+            previousButton.setVisible(true);
+
+            previousButton.addActionListener(e -> {
+                currentPageSearch--;
+                createHistoryPanel(); // Odtwarzanie panelu
+            });
+
+        }
+        buttonPanel.add(previousButton);
+        JButton nextButton = createRoundedButton("Poprzednie ->", 20);
+        nextButton.setVisible(false);
+        if (endIndex < totalTransactions) {
+            nextButton.setVisible(true);
+            nextButton.addActionListener(e -> {
+                currentPageSearch++;
+                createHistoryPanel(); // Odtwarzanie panelu
+            });
+
+        }
+        buttonPanel.add(nextButton);
+
+        navigationPanel.add(buttonPanel, BorderLayout.WEST);
+
+        // Wyświetlanie numeru strony po prawej stronie
+        JLabel pageLabel = new JLabel(String.format("Strona %d z %d", currentPageSearch + 1, totalPages));
+        pageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        pageLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        pageLabel.setForeground(Color.WHITE); // Ustaw kolor tekstu
+        navigationPanel.add(pageLabel, BorderLayout.EAST);
+
+        // Dodanie panelu nawigacyjnego do dolnej części głównego panelu
+        historyPanel.add(navigationPanel, BorderLayout.SOUTH);
+
+        // Aktualizacja warstwy
+        updateLayerContent(historyPanel);
+    }
 
     public void createSettingsPanel() {
         toggle = createRoundedPanel(new Color(0, 0, 0, 0));
@@ -365,9 +924,62 @@ public class MainScreen extends ScreenUtil {
             createSettingsPanelForPrivate(settingsPanel);
         } else if (customer instanceof BusinessCustomer) {
             // BusinessCustomer customer = (BusinessCustomer) CentralDatabase.getInstance().getUser();
-            createSettingsPanelForBuissnes(settingsPanel, (BusinessCustomer) customer);
+            createSettingsPanelForBuissnes(settingsPanel);
+        } else if (customer instanceof RootUser) {
+            createSettingsPanelForRoot(settingsPanel);
+        } else if (customer instanceof Employee) {
+            createSettingsPanelForEmployee(settingsPanel);
         }
 
+    }
+
+    public void createSettingsPanelForRoot(JPanel settingsPanel) {
+        RootUser customer = (RootUser) CentralDatabase.getInstance().getCurrentUser();
+
+        EditableField idField = new EditableField("ID", customer.getID());
+        EditableField firstNameField = new EditableField("Imię", customer.getFirstName());
+        EditableField secondNameField = new EditableField("Drugie imię", customer.getSecondName());
+        EditableField lastNameField = new EditableField("Nazwisko", customer.getLastName());
+        EditableField passwordField = new EditableField("Hasło", ".".repeat(customer.getPassword().length()));
+        EditableField rentedItemsField = new EditableField("Ilość wypożyczonych pojazdów (obecnie)", String.valueOf(RentalServices.getInstance().getNumberOfActiveTransaction()));
+        EditableField transactionHistoryField = new EditableField("łączna ilość wypożyczonych pojazdów", String.valueOf(RentalServices.getInstance().getAllNumberOfTransactions()));
+        EditableField userField = new EditableField("łączna ilość użytkowników", String.valueOf(RentalServices.getInstance().getNumberOfUsers()));
+        EditableField vehicleField = new EditableField("łączna ilość pojazdów", String.valueOf(RentalServices.getInstance().getNumberOfVehicle()));
+        EditableField brandField = new EditableField("łączna ilość Marek", String.valueOf(RentalServices.getInstance().getNumberOfVehicleBrand()));
+        idField.getButton().setVisible(false);
+        rentedItemsField.getButton().setVisible(false);
+        transactionHistoryField.getButton().setVisible(false);
+
+
+        addFieldListener(firstNameField, "Imię", customer::getFirstName, customer::setFirstName);
+        addFieldListener(secondNameField, "Drugie imię", customer::getSecondName, customer::setSecondName);
+        addFieldListener(lastNameField, "Nazwisko", customer::getLastName, customer::setLastName);
+        addFieldListener(passwordField, "Hasło", customer::getPassword, customer::setPassword);
+        //addFieldListener(rentedItemsField, "Wynajęte przedmioty", () -> String.valueOf(customer.getNumberOfRentedItems()), value -> customer.setNumberOfRentedItems(Integer.parseInt(value)));
+        CentralDatabase.getInstance().setCurrentUser(customer);
+
+
+        // Add EditableFields to the settings panel`
+        JLabel ownerInfoPanel = createLabel("Informacje o Administratorze", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
+        settingsPanel.add(ownerInfoPanel);
+        settingsPanel.add(new JLabel());
+        settingsPanel.add(idField);
+        settingsPanel.add(firstNameField);
+        settingsPanel.add(secondNameField);
+        settingsPanel.add(lastNameField);
+        settingsPanel.add(passwordField);
+        settingsPanel.add(new JLabel());
+        JLabel vehicleInfoPanel = createLabel("Informacje o wypożyczalni", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
+        settingsPanel.add(vehicleInfoPanel);
+        settingsPanel.add(new JLabel());
+        settingsPanel.add(userField);
+        settingsPanel.add(rentedItemsField);
+        settingsPanel.add(transactionHistoryField);
+        settingsPanel.add(vehicleField);
+        settingsPanel.add(brandField);
+
+
+        updateLayerContent(settingsPanel);
     }
 
     public void createSettingsPanelForPrivate(JPanel settingsPanel) {
@@ -383,6 +995,7 @@ public class MainScreen extends ScreenUtil {
         EditableField emailField = new EditableField("Email", customer.getEmail());
         EditableField phoneNumberField = new EditableField("Numer telefonu ", customer.getPhoneNumber());
         EditableField passwordField = new EditableField("Hasło", ".".repeat(customer.getPassword().length()));
+        EditableField saldoField = new EditableField("Saldo", String.valueOf(customer.getSaldo()));
         EditableField rentedItemsField = new EditableField("Ilość wypożyczonych pojazdów (obecnie)", String.valueOf(customer.getNumberOfRentedItems()));
         EditableField transactionHistoryField = new EditableField("łączna ilość wypożyczonych pojazdów", String.valueOf(customer.getRentedHistory().size()));
         idField.getButton().setVisible(false);
@@ -399,6 +1012,7 @@ public class MainScreen extends ScreenUtil {
         addFieldListener(cityField, "Miasto", customer::getCity, customer::setCity);
         addFieldListener(postalCodeField, "Kod pocztowy", customer::getPostalCode, customer::setPostalCode);
         addFieldListener(passwordField, "Hasło", customer::getPassword, customer::setPassword);
+        addFieldListener(saldoField, "Saldo", customer::getSaldoString, customer::addToSaldoString);
         //addFieldListener(rentedItemsField, "Wynajęte przedmioty", () -> String.valueOf(customer.getNumberOfRentedItems()), value -> customer.setNumberOfRentedItems(Integer.parseInt(value)));
         CentralDatabase.getInstance().setCurrentUser(customer);
 
@@ -417,6 +1031,7 @@ public class MainScreen extends ScreenUtil {
         settingsPanel.add(phoneNumberField);
         settingsPanel.add(emailField);
         settingsPanel.add(passwordField);
+        settingsPanel.add(saldoField);
         JLabel vehicleInfoPanel = createLabel("Informacje o wypożyczeniach", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
         settingsPanel.add(vehicleInfoPanel);
         settingsPanel.add(new JLabel());
@@ -427,21 +1042,14 @@ public class MainScreen extends ScreenUtil {
         updateLayerContent(settingsPanel);
     }
 
-    public void createSettingsPanelForBuissnes(JPanel settingsPanel, BusinessCustomer company) {
-
+    public void createSettingsPanelForBuissnes(JPanel settingsPanel) {
+        BusinessCustomer company = (BusinessCustomer) CentralDatabase.getInstance().getCurrentUser();
         CentralDatabase.getInstance().setCurrentUser(company);
         CentralDatabase.getInstance().updateUser(User.class, company);
-        company.addEmployee("E001", Employee.createNewEmployee());
-        company.addEmployee("E002", Employee.createNewEmployee());
-        company.addEmployee("E003", Employee.createNewEmployee());
-        company.addEmployee("E004", Employee.createNewEmployee());
-        company.addEmployee("E005", Employee.createNewEmployee());
-        company.addEmployee("E006", Employee.createNewEmployee());
-        company.addEmployee("E007", Employee.createNewEmployee());
         settingsPanel.setLayout(new GridLayout(0, 2, 10, 10));
         JLabel infoLabel = createLabel("Informacje o firmie", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
         EditableField companyNameField = new EditableField("Nazwa Firmy", company.getCompanyName());
-        EditableField companyIdField = new EditableField("ID Firmy", company.getCompanyId());
+        EditableField companyIdField = new EditableField("ID Firmy", company.getID());
         EditableField addressField = new EditableField("Adres Firmy", company.getCompanyAddress());
         EditableField postalCodeField = new EditableField("Kod Pocztowy", company.getCompanyPostalCode());
         EditableField cityField = new EditableField("Miasto", company.getCompanyCity());
@@ -456,8 +1064,6 @@ public class MainScreen extends ScreenUtil {
         addFieldListener(addressField, "Adres", company::getCompanyAddress, company::setCompanyAddress);
         addFieldListener(postalCodeField, "Kod Pocztowy", company::getCompanyPostalCode, company::setCompanyPostalCode);
         addFieldListener(cityField, "Miasto", company::getCompanyCity, company::setCompanyCity);
-        addFieldMapListener(employeesField, "Pracownicy", company::getEmployees,
-                company::addEmployee, true);
 
 
         settingsPanel.add(infoLabel);
@@ -513,132 +1119,220 @@ public class MainScreen extends ScreenUtil {
 
     }
 
- private static final int VEHICLES_PER_PAGE = 7; // Liczba pojazdów na stronę
-private int currentPageSearch = 0; // Bieżąca strona
+    public void createSettingsPanelForEmployee(JPanel settingsPanel) {
+        Employee employee = (Employee) CentralDatabase.getInstance().getCurrentUser();
+        BusinessCustomer company = employee.getEmployer();
 
-public void createSearchPanel() {
-    // Główny panel z BorderLayout
-    mainContentPanel.removeAll();
-    mainContentPanel.setLayout(new BorderLayout(10, 10));
+        settingsPanel.setLayout(new GridLayout(0, 2, 10, 10));
+        JLabel infoLabel = createLabel("Informacje o firmie", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
+        EditableField companyNameField = new EditableField("Nazwa Firmy", company.getCompanyName());
+        EditableField companyIdField = new EditableField("ID Firmy", company.getID());
+        EditableField addressField = new EditableField("Adres Firmy", company.getCompanyAddress());
+        EditableField postalCodeField = new EditableField("Kod Pocztowy", company.getCompanyPostalCode());
+        EditableField cityField = new EditableField("Miasto", company.getCompanyCity());
+        EditableField phoneNumberField = new EditableField("Number Telefonu", company.getCompanyPhoneNumber());
+        EditableField companyEmail = new EditableField("Adres e-mail", company.getCompanyEmail());
+        EditableField employeesField = new EditableField("Pracownicy", String.valueOf(company.getEmployees().size()));
 
-    // Pasek wyszukiwania
-    JPanel filterPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
-    filterPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
 
-    JTextField brandField = new JTextField(10);
-    JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Wszystko", "Rower", "Elektryczny", "Hulajnoga"});
-    JComboBox<String> electricComboBox = new JComboBox<>(new String[]{"Wszystko", "Elektryczny", "Nie elektryczny"});
-    JButton searchButton = createRoundedButton("Szukaj",20);
+        settingsPanel.add(infoLabel);
+        settingsPanel.add(new JLabel()); // Spacer
+        settingsPanel.add(companyIdField);
+        settingsPanel.add(companyNameField);
+        settingsPanel.add(phoneNumberField);
+        settingsPanel.add(companyEmail);
+        settingsPanel.add(addressField);
+        settingsPanel.add(postalCodeField);
+        settingsPanel.add(cityField);
+        settingsPanel.add(employeesField);
 
-    filterPanel.add(createLabel("Marka :",20));
-    filterPanel.add(brandField);
-    filterPanel.add(createLabel("Typ :",20));
-    filterPanel.add(typeComboBox);
-    filterPanel.add(createLabel("Elektryczny : ",20));
-    filterPanel.add(electricComboBox);
-    filterPanel.add(searchButton);
+        JLabel ownerInfoPanel = createLabel("Informacje o Pracowniku ", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
+        settingsPanel.add(new JLabel());
+        settingsPanel.add(ownerInfoPanel);
+        settingsPanel.add(new JLabel());
 
-    mainContentPanel.add(filterPanel, BorderLayout.NORTH);
+        EditableField ownerCompanyNameField = new EditableField("Imię", employee.getFirstName() + employee.getSecondName());
+        EditableField ownerCompanyLastNameField = new EditableField("Nazwisko ", employee.getLastName());
+        EditableField ownerCompanyIdField = new EditableField("ID użytkownika", employee.getID());
+        EditableField ownerCompanyPhoneField = new EditableField("Numer telefonu ", employee.getPhoneNumber());
+        EditableField ownerCompanyEmailField = new EditableField("Adress e-mail", employee.getEmail());
+        EditableField ownerCompanyAddressField = new EditableField("Adres ", employee.getAddress());
+        EditableField ownerCompanyCityField = new EditableField("Miasto", employee.getCity());
+        EditableField ownerCompanyPostalCodeField = new EditableField("Kod pocztowy", employee.getPostalCode());
 
-    // Panel na wyniki
-    JPanel resultsPanel = new JPanel();
-    resultsPanel.setLayout(new GridLayout(VEHICLES_PER_PAGE, 1, 10, 10));
-    resultsPanel.setBackground(Colors.BACKGROUND.getColor());
-    mainContentPanel.add(resultsPanel, BorderLayout.CENTER);
+        addFieldListener(ownerCompanyNameField, "Imię", employee::getFirstName, employee::setFirstName);
+        addFieldListener(ownerCompanyLastNameField, "Nazwisko ", employee::getLastName, employee::setLastName);
+        addFieldListener(ownerCompanyAddressField, "Adres ", employee::getAddress, employee::setAddress);
+        addFieldListener(ownerCompanyCityField, "Miasto", employee::getCity, employee::setCity);
+        addFieldListener(ownerCompanyPostalCodeField, "Kod pocztowy", employee::getPostalCode, employee::setPostalCode);
+        addFieldListener(ownerCompanyEmailField, "E-mail", employee::getEmail, employee::setEmail);
+        addFieldListener(ownerCompanyPhoneField, "Numer Telefonu", employee::getPhoneNumber, employee::setPhoneNumber);
 
-    // Panel nawigacyjny na dole
-    JPanel navigationPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
-    navigationPanel.setLayout(new BorderLayout(10, 0));
+        settingsPanel.add(ownerCompanyIdField);
+        settingsPanel.add(ownerCompanyNameField);
+        settingsPanel.add(ownerCompanyLastNameField);
+        settingsPanel.add(phoneNumberField);
+        settingsPanel.add(ownerCompanyEmailField);
 
-    JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
-    buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
 
-    JLabel pageLabel = new JLabel(); // Numer strony
-    navigationPanel.add(buttonPanel, BorderLayout.WEST);
-    navigationPanel.add(pageLabel, BorderLayout.EAST);
+        settingsPanel.add(ownerCompanyAddressField);
+        settingsPanel.add(ownerCompanyCityField);
+        settingsPanel.add(ownerCompanyPostalCodeField);
+//         JScrollPane settingsScroll = new JScrollPane(settingsPanel);
+//         setScrollPane(settingsScroll);
+//        //settingsScroll.setOpaque(false);
 
-    mainContentPanel.add(navigationPanel, BorderLayout.SOUTH);
+        updateLayerContent(settingsPanel);
 
-    // Domyślne ładowanie wszystkich dostępnych pojazdów
-    searchButton.addActionListener(e -> performSearchAndUpdate(brandField.getText(),
-            (String) typeComboBox.getSelectedItem(),
-            (String) electricComboBox.getSelectedItem()));
-
-    // Wyświetlenie domyślnych danych (wszystkie dostępne pojazdy)
-    performSearchAndUpdate("", "Wszystko", "Wszystko");
-
-    updateLayerContent(mainContentPanel);
-}
-
-private void performSearchAndUpdate(String brand, String type, String electric) {
-    // Pobieranie danych z bazy
-    @SuppressWarnings("unchecked")
-    Map<String, Vehicle> vehicleMap = (Map<String, Vehicle>) CentralDatabase.getInstance().getCachedData().get(Vehicle.class);
-
-    // Filtrowanie wyników
-    List<Vehicle> filteredVehicles = vehicleMap.values().stream()
-            .filter(vehicle -> vehicle != null && !vehicle.isRented()) // Domyślnie tylko dostępne
-            .filter(vehicle -> brand.isEmpty() || vehicle.getVehicleModel().toLowerCase().contains(brand.toLowerCase()))
-            .filter(vehicle -> type.equals("Wszystko") || vehicle.getVehicleType().equalsIgnoreCase(type))
-            .filter(vehicle -> electric.equals("Wszystko") ||
-                    (electric.equals("Elektryczny") && vehicle.isElectric()) ||
-                    (electric.equals("Nie elektryczny") && !vehicle.isElectric()))
-            .collect(Collectors.toList());
-
-    // Aktualizacja panelu wyszukiwania
-    updateSearchPanel(filteredVehicles);
-}
-
-private void updateSearchPanel(List<Vehicle> filteredVehicles) {
-    JPanel resultsPanel = (JPanel) ((BorderLayout) mainContentPanel.getLayout()).getLayoutComponent(BorderLayout.CENTER);
-    JPanel navigationPanel = (JPanel) ((BorderLayout) mainContentPanel.getLayout()).getLayoutComponent(BorderLayout.SOUTH);
-
-    resultsPanel.removeAll();
-
-    // Wyświetlanie wyników dla bieżącej strony
-    int totalVehicles = filteredVehicles.size();
-    int totalPages = (int) Math.ceil((double) totalVehicles / VEHICLES_PER_PAGE);
-    int startIndex = currentPageSearch * VEHICLES_PER_PAGE;
-    int endIndex = Math.min(startIndex + VEHICLES_PER_PAGE, totalVehicles);
-
-    for (int i = startIndex; i < endIndex; i++) {
-        Vehicle vehicle = filteredVehicles.get(i);
-        ContentPanel contentPanel = new ContentPanel(vehicle);
-        resultsPanel.add(contentPanel);
     }
 
-    // Aktualizacja przycisków nawigacyjnych
-    JPanel buttonPanel = (JPanel) ((BorderLayout) navigationPanel.getLayout()).getLayoutComponent(BorderLayout.WEST);
-    JLabel pageLabel = (JLabel) ((BorderLayout) navigationPanel.getLayout()).getLayoutComponent(BorderLayout.EAST);
+    private static final int VEHICLES_PER_PAGE = 8; // Liczba pojazdów na stronę
+    private int currentPageSearch = 0; // Bieżąca strona
 
-    buttonPanel.removeAll();
+    public void createSearchPanel() {
+        // Główny panel z BorderLayout
+        mainContentPanel.removeAll();
+        mainContentPanel.setLayout(new BorderLayout(10, 10));
 
-    if (currentPageSearch > 0) {
-        JButton previousButton = createRoundedButton("< - Poprzednie",20);
-        previousButton.addActionListener(e -> {
-            currentPageSearch--;
-            updateSearchPanel(filteredVehicles);
-        });
-        buttonPanel.add(previousButton);
+        // Pasek wyszukiwania
+        JPanel filterPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        filterPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 10));
+
+        JComboBox<String> brandComboBox = new JComboBox<>(getAvailableBrands());
+        JComboBox<String> typeComboBox = new JComboBox<>(new String[]{"Wszystko", SingleTrackVehicle.MTB, SingleTrackVehicle.SZOSA, SingleTrackVehicle.MIASTO});
+        JComboBox<String> electricComboBox = new JComboBox<>(new String[]{"Wszystko", "Elektryczny", "Nie elektryczny"});
+        JTextField minPriceField = new JTextField(5);
+        JTextField maxPriceField = new JTextField(5);
+        JButton searchButton = createRoundedButton("Szukaj", 20);
+
+        filterPanel.add(createLabel("Marka :", 20));
+        filterPanel.add(brandComboBox);
+        filterPanel.add(createLabel("Typ :", 20));
+        filterPanel.add(typeComboBox);
+        filterPanel.add(createLabel("Elektryczny :", 20));
+        filterPanel.add(electricComboBox);
+        filterPanel.add(createLabel("Cena od :", 20));
+        filterPanel.add(minPriceField);
+        filterPanel.add(createLabel("Cena do :", 20));
+        filterPanel.add(maxPriceField);
+        filterPanel.add(searchButton);
+
+        mainContentPanel.add(filterPanel, BorderLayout.NORTH);
+
+        // Panel na wyniki
+        JPanel resultsPanel = new JPanel();
+        resultsPanel.setLayout(new GridLayout(VEHICLES_PER_PAGE, 1, 10, 10));
+        resultsPanel.setBackground(Colors.BACKGROUND.getColor());
+        mainContentPanel.add(resultsPanel, BorderLayout.CENTER);
+
+        // Panel nawigacyjny na dole
+        JPanel navigationPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        navigationPanel.setLayout(new BorderLayout(10, 0));
+
+        JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 0));
+
+        JLabel pageLabel = new JLabel(); // Numer strony
+        navigationPanel.add(buttonPanel, BorderLayout.WEST);
+        navigationPanel.add(pageLabel, BorderLayout.EAST);
+
+        mainContentPanel.add(navigationPanel, BorderLayout.SOUTH);
+
+        // Domyślne ładowanie wszystkich dostępnych pojazdów
+        searchButton.addActionListener(e -> performSearchAndUpdate(
+                (String) brandComboBox.getSelectedItem(),
+                (String) typeComboBox.getSelectedItem(),
+                (String) electricComboBox.getSelectedItem(),
+                minPriceField.getText(),
+                maxPriceField.getText()
+        ));
+
+        // Wyświetlenie domyślnych danych (wszystkie dostępne pojazdy)
+        performSearchAndUpdate("Wszystko", "Wszystko", "Wszystko", "", "");
+
+        updateLayerContent(mainContentPanel);
     }
 
-    if (endIndex < totalVehicles) {
-        JButton nextButton = createRoundedButton("Następne -> ",20);
-        nextButton.addActionListener(e -> {
-            currentPageSearch++;
-            updateSearchPanel(filteredVehicles);
-        });
-        buttonPanel.add(nextButton);
+    private String[] getAvailableBrands() {
+        @SuppressWarnings("unchecked")
+        Map<String, VehicleBrand> brandMap = (Map<String, VehicleBrand>) CentralDatabase.getInstance().getCachedData().get(VehicleBrand.class);
+        return brandMap.values().stream().map(VehicleBrand::getName).toArray(String[]::new);
     }
 
-    // Aktualizacja numeru strony
-    pageLabel.setText(String.format("Strona %d z %d", currentPageSearch + 1, totalPages));
+    private void performSearchAndUpdate(String brand, String type, String electric, String minPrice, String maxPrice) {
+        @SuppressWarnings("unchecked")
+        Map<String, Vehicle> vehicleMap = (Map<String, Vehicle>) CentralDatabase.getInstance().getCachedData().get(Vehicle.class);
 
-    resultsPanel.revalidate();
-    resultsPanel.repaint();
-    navigationPanel.revalidate();
-    navigationPanel.repaint();
-}
+        double minPriceValue = minPrice.isEmpty() ? Double.MIN_VALUE : Double.parseDouble(minPrice);
+        double maxPriceValue = maxPrice.isEmpty() ? Double.MAX_VALUE : Double.parseDouble(maxPrice);
+
+        List<Vehicle> filteredVehicles = vehicleMap.values().stream()
+                .filter(vehicle -> vehicle != null && !vehicle.isRented())
+                .filter(vehicle -> brand.equals("Wszystko") || vehicle.getVehicleBrand().getName().equalsIgnoreCase(brand))
+                .filter(vehicle -> type.equals("Wszystko") || vehicle.getVehicleType().equalsIgnoreCase(type))
+                .filter(vehicle -> electric.equals("Wszystko") ||
+                        (electric.equals("Elektryczny") && vehicle.isElectric()) ||
+                        (electric.equals("Nie elektryczny") && !vehicle.isElectric()))
+                .filter(vehicle -> vehicle.getPrice() >= minPriceValue && vehicle.getPrice() <= maxPriceValue)
+                .collect(Collectors.toList());
+
+        updateSearchPanel(filteredVehicles);
+    }
+
+    private void updateSearchPanel(List<Vehicle> filteredVehicles) {
+        JPanel resultsPanel = (JPanel) ((BorderLayout) mainContentPanel.getLayout()).getLayoutComponent(BorderLayout.CENTER);
+        JPanel navigationPanel = (JPanel) ((BorderLayout) mainContentPanel.getLayout()).getLayoutComponent(BorderLayout.SOUTH);
+
+        resultsPanel.removeAll();
+        // Wyświetlanie wyników dla bieżącej strony
+        int totalVehicles = filteredVehicles.size();
+        int totalPages = (int) Math.ceil((double) totalVehicles / VEHICLES_PER_PAGE);
+        int startIndex = currentPageSearch * VEHICLES_PER_PAGE;
+        int endIndex = Math.min(startIndex + VEHICLES_PER_PAGE, totalVehicles);
+        for (int i = startIndex; i < endIndex; i++) {
+            Vehicle vehicle = filteredVehicles.get(i);
+            ContentPanel contentPanel = new ContentPanel(vehicle);
+            if(CentralDatabase.getInstance().getCurrentUser() instanceof Customer){
+                Customer c = (Customer) CentralDatabase.getInstance().getCurrentUser();
+                if(c.getSaldo()<vehicle.getPrice()){
+                    contentPanel.getRentButton().setText("Zbyt niskie saldo");
+                    contentPanel.getRentButton().setEnabled(false);           }
+            }
+            resultsPanel.add(contentPanel);
+        }
+
+        // Aktualizacja przycisków nawigacyjnych
+        JPanel buttonPanel = (JPanel) ((BorderLayout) navigationPanel.getLayout()).getLayoutComponent(BorderLayout.WEST);
+        JLabel pageLabel = (JLabel) ((BorderLayout) navigationPanel.getLayout()).getLayoutComponent(BorderLayout.EAST);
+
+        buttonPanel.removeAll();
+
+        if (currentPageSearch > 0) {
+            JButton previousButton = createRoundedButton("< - Poprzednie", 20);
+            previousButton.addActionListener(e -> {
+                currentPageSearch--;
+                updateSearchPanel(filteredVehicles);
+            });
+            buttonPanel.add(previousButton);
+        }
+
+        if (endIndex < totalVehicles) {
+            JButton nextButton = createRoundedButton("Następne -> ", 20);
+            nextButton.addActionListener(e -> {
+                currentPageSearch++;
+                updateSearchPanel(filteredVehicles);
+            });
+            buttonPanel.add(nextButton);
+        }
+
+        // Aktualizacja numeru strony
+        pageLabel.setText(String.format("Strona %d z %d", currentPageSearch + 1, totalPages));
+
+        resultsPanel.revalidate();
+        resultsPanel.repaint();
+        navigationPanel.revalidate();
+        navigationPanel.repaint();
+    }
 
 
     public void createStatsPanel() {
@@ -716,67 +1410,6 @@ private void updateSearchPanel(List<Vehicle> filteredVehicles) {
         });
     }
 
-    private void addFieldMapListener(
-            EditableField field,
-            String label,
-            Supplier<Map<String, Employee>> getter, // Getter zwracający mapę
-            BiConsumer<String, Employee> setter,   // Setter aktualizujący mapę
-            boolean isSwitchable
-    ) {
-        if (isSwitchable) {
-            field.getButton().setVisible(true);
-        } else {
-            return;
-        }
-
-        field.getButton().addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                // Tworzenie panelu edycyjnego
-                AbstractEditablePanel element = new EditiableEmployeeViewPanel(
-                        "Zmień " + label,
-                        label,// Początkowy tekst, jeśli wymagany
-                        getter.get() // Wartość domyślna
-                );
-                element.setPreferredSize(layers.getPreferredSize());
-
-                // Obsługa przycisku zamknięcia
-                element.getCloseLabel().addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        toggle.remove(element);
-                        layers.remove(toggle);
-                        layers.revalidate();
-                        layers.repaint();
-                    }
-                });
-
-                // Dodanie panelu elementu do panelu toggle
-                toggle.add(element);
-                layers.add(toggle, JLayeredPane.PALETTE_LAYER);
-                layers.revalidate();
-                layers.repaint();
-
-                // Obsługa akcji dla przycisku "Zapisz zmiany"
-                element.addMenuListener(() -> {
-                    if (element.validateData()) {
-                        String newEmployeeId = element.getEnteredText(); // Pobranie klucza (ID pracownika)
-                        Map<String, Employee> employeeMap = getter.get(); // Pobranie mapy
-                        if (!employeeMap.containsKey(newEmployeeId)) {
-                            String employeeName = JOptionPane.showInputDialog("Podaj imię pracownika:");
-                            if (employeeName != null && !employeeName.trim().isEmpty()) {
-                                Employee newEmployee = Employee.createNewEmployee(); // Tworzenie nowego pracownika
-                                setter.accept(newEmployeeId, newEmployee); // Aktualizacja mapy
-                                createSettingsPanel(); // Odświeżenie panelu
-                            }
-                        } else {
-                            JOptionPane.showMessageDialog(null, "Pracownik o podanym ID już istnieje.");
-                        }
-                    }
-                });
-            }
-        });
-    }
 
     void setScrollPane(JScrollPane scrollPane) {
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -814,14 +1447,43 @@ private void updateSearchPanel(List<Vehicle> filteredVehicles) {
     }
 
     public static void main(String[] args) {
-        Vehicle b = new Bike(CentralDatabase.getInstance().getNextID(Vehicle.class, SingleTrackVehicle.STV_BIKE_PREFIX), "Rower szosowy", "Glowrer", false);
-        Vehicle eb = new EBike(CentralDatabase.getInstance().getNextID(Vehicle.class, SingleTrackVehicle.STV_E_BIKE_PREFIX), "Rower elektryczny", "Kross", 99);
-        CentralDatabase.getInstance().addObject(Vehicle.class, b.getVehicleId(), b);
-        CentralDatabase.getInstance().addObject(Vehicle.class, eb.getVehicleId(), eb);
-        SwingUtilities.invokeLater(() -> {
-            MainScreen mainScreen = new MainScreen();
-            mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser() == null ? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
-        });
+        CentralDatabase cd = CentralDatabase.getInstance();
+        VehicleBrand Brand = new VehicleBrand("Trek");
+        Brand.addModel(new VehicleModel("Marlin"));
+        cd.addObject(
+                VehicleBrand.class, Brand.getName(), Brand
+        );
+
+        VehicleBrand Brand1 = new VehicleBrand("Specialized");
+        Brand1.addModel(new VehicleModel("Rockhopper Elite"));
+        cd.addObject(
+                VehicleBrand.class, Brand1.getName(), Brand1
+        );
+
+        VehicleBrand Brand2 = new VehicleBrand("Giant");
+        Brand2.addModel(new VehicleModel("Talon 1"));
+        cd.addObject(
+                VehicleBrand.class, Brand2.getName(), Brand2
+        );
+        Vehicle v = new Bike(SingleTrackVehicle.MTB, Brand, Brand.getModels().get("Marlin"), false, false);
+        cd.addObject(
+                Vehicle.class, v.getVehicleId(), v
+        );
+        Vehicle v1 = new Bike(SingleTrackVehicle.MTB, Brand1, Brand1.getModels().get("Rockhopper Elite"), false, false);
+        cd.addObject(
+                Vehicle.class, v1.getVehicleId(), v1
+        );
+        Vehicle v2 = new Bike(SingleTrackVehicle.MTB, Brand2, Brand2.getModels().get("Talon 1"), false, false);
+        Vehicle v3 = new Scooter(SingleTrackVehicle.MTB,Brand1,Brand1.getModels().get("Rockhopper Elite"),67);
+
+        cd.addObject(
+                Vehicle.class, v3.getVehicleId(), v3
+        );
+
+//        SwingUtilities.invokeLater(() -> {
+//            MainScreen mainScreen = new MainScreen();
+//            mainScreen.showScreen(CentralDatabase.getInstance().getCurrentUser() == null ? null : CentralDatabase.getInstance().getCurrentUser().getUserType());
+//        });
     }
 
 }
