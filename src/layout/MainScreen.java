@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -553,7 +554,7 @@ public class MainScreen extends ScreenUtil {
                     VehicleBrand brand = brands.get(selectedBrand);
                     if (brand != null) {
                         brand.addModel(new VehicleModel(modelName));
-                        CentralDatabase.getInstance().addObject(VehicleBrand.class,brand.getName(),brand);
+                        CentralDatabase.getInstance().addObject(VehicleBrand.class, brand.getName(), brand);
                         JOptionPane.showMessageDialog(adminInfoPanel, "Dodano nowy model: " + modelName + " do marki: " + selectedBrand, "Sukces", JOptionPane.INFORMATION_MESSAGE);
                     }
                 } else {
@@ -716,11 +717,9 @@ public class MainScreen extends ScreenUtil {
                     String batteryLevel = batteryLevelField.getText();
 
                     if (selectedType != null && selectedBrand != null && selectedModel != null && !price.isEmpty() && !batteryLevel.isEmpty()) {
-                        Vehicle scooter = new Scooter(selectedType, brands.get(selectedBrand), brands.get(selectedBrand).getModels().get(selectedModel), Integer.parseInt(batteryLevel)) {
-                        };
+                        Vehicle scooter = new Scooter(selectedType, brands.get(selectedBrand), brands.get(selectedBrand).getModels().get(selectedModel), Integer.parseInt(batteryLevel));
                         scooter.setPrice(Integer.parseInt(price));
-
-                        CentralDatabase.getInstance().addObject(Vehicle.class, scooter.getVehicleId(), scooter);
+                        CentralDatabase.getInstance().addObject(Vehicle.class,scooter.getVehicleId(),scooter);
 
                         updateCenterPanel(centerPanel, 0); // Powrót do menu głównego po dodaniu
                     } else {
@@ -1012,7 +1011,7 @@ public class MainScreen extends ScreenUtil {
         addFieldListener(cityField, "Miasto", customer::getCity, customer::setCity);
         addFieldListener(postalCodeField, "Kod pocztowy", customer::getPostalCode, customer::setPostalCode);
         addFieldListener(passwordField, "Hasło", customer::getPassword, customer::setPassword);
-        addFieldListener(saldoField, "Saldo", customer::getSaldoString, customer::addToSaldoString);
+        addFieldListener(saldoField, "Saldo", customer::getSaldoString, customer::setSaldo);
         //addFieldListener(rentedItemsField, "Wynajęte przedmioty", () -> String.valueOf(customer.getNumberOfRentedItems()), value -> customer.setNumberOfRentedItems(Integer.parseInt(value)));
         CentralDatabase.getInstance().setCurrentUser(customer);
 
@@ -1032,6 +1031,7 @@ public class MainScreen extends ScreenUtil {
         settingsPanel.add(emailField);
         settingsPanel.add(passwordField);
         settingsPanel.add(saldoField);
+          settingsPanel.add(new JLabel());
         JLabel vehicleInfoPanel = createLabel("Informacje o wypożyczeniach", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
         settingsPanel.add(vehicleInfoPanel);
         settingsPanel.add(new JLabel());
@@ -1080,7 +1080,7 @@ public class MainScreen extends ScreenUtil {
         JLabel ownerInfoPanel = createLabel("Informacje o właścicielu", new Font("SansSerif", Font.BOLD, 20), Color.WHITE);
         settingsPanel.add(new JLabel());
         settingsPanel.add(ownerInfoPanel);
-        settingsPanel.add(new JLabel());
+        //settingsPanel.add(new JLabel());
 
 
         Customer customer = (Customer) company;
@@ -1092,6 +1092,7 @@ public class MainScreen extends ScreenUtil {
         EditableField ownerCompanyAddressField = new EditableField("Adres ", customer.getAddress());
         EditableField ownerCompanyCityField = new EditableField("Miasto", customer.getCity());
         EditableField ownerCompanyPostalCodeField = new EditableField("Kod pocztowy", customer.getPostalCode());
+        EditableField saldoField = new EditableField("Saldo", String.valueOf(customer.getSaldo()));
 
         addFieldListener(ownerCompanyNameField, "Imię", customer::getFirstName, customer::setFirstName);
         addFieldListener(ownerCompanyLastNameField, "Nazwisko ", customer::getLastName, customer::setLastName);
@@ -1100,6 +1101,7 @@ public class MainScreen extends ScreenUtil {
         addFieldListener(ownerCompanyPostalCodeField, "Kod pocztowy", customer::getPostalCode, customer::setPostalCode);
         addFieldListener(ownerCompanyEmailField, "E-mail", customer::getEmail, customer::setEmail);
         addFieldListener(ownerCompanyPhoneField, "Numer Telefonu", customer::getPhoneNumber, customer::setPhoneNumber);
+        addFieldListener(saldoField, "Saldo", customer::getSaldoString, customer::setSaldo);
 
         settingsPanel.add(ownerCompanyIdField);
         settingsPanel.add(ownerCompanyNameField);
@@ -1111,6 +1113,7 @@ public class MainScreen extends ScreenUtil {
         settingsPanel.add(ownerCompanyAddressField);
         settingsPanel.add(ownerCompanyCityField);
         settingsPanel.add(ownerCompanyPostalCodeField);
+        settingsPanel.add(saldoField);
 //         JScrollPane settingsScroll = new JScrollPane(settingsPanel);
 //         setScrollPane(settingsScroll);
 //        //settingsScroll.setOpaque(false);
@@ -1159,6 +1162,7 @@ public class MainScreen extends ScreenUtil {
         EditableField ownerCompanyAddressField = new EditableField("Adres ", employee.getAddress());
         EditableField ownerCompanyCityField = new EditableField("Miasto", employee.getCity());
         EditableField ownerCompanyPostalCodeField = new EditableField("Kod pocztowy", employee.getPostalCode());
+        EditableField saldoField = new EditableField("Saldo", String.valueOf(employee.getSaldo()));
 
         addFieldListener(ownerCompanyNameField, "Imię", employee::getFirstName, employee::setFirstName);
         addFieldListener(ownerCompanyLastNameField, "Nazwisko ", employee::getLastName, employee::setLastName);
@@ -1167,6 +1171,7 @@ public class MainScreen extends ScreenUtil {
         addFieldListener(ownerCompanyPostalCodeField, "Kod pocztowy", employee::getPostalCode, employee::setPostalCode);
         addFieldListener(ownerCompanyEmailField, "E-mail", employee::getEmail, employee::setEmail);
         addFieldListener(ownerCompanyPhoneField, "Numer Telefonu", employee::getPhoneNumber, employee::setPhoneNumber);
+        addFieldListener(saldoField, "Saldo", employee::getSaldoString, employee::setSaldo);
 
         settingsPanel.add(ownerCompanyIdField);
         settingsPanel.add(ownerCompanyNameField);
@@ -1292,11 +1297,12 @@ public class MainScreen extends ScreenUtil {
         for (int i = startIndex; i < endIndex; i++) {
             Vehicle vehicle = filteredVehicles.get(i);
             ContentPanel contentPanel = new ContentPanel(vehicle);
-            if(CentralDatabase.getInstance().getCurrentUser() instanceof Customer){
+            if (CentralDatabase.getInstance().getCurrentUser() instanceof Customer) {
                 Customer c = (Customer) CentralDatabase.getInstance().getCurrentUser();
-                if(c.getSaldo()<vehicle.getPrice()){
+                if (c.getSaldo() < vehicle.getPrice()) {
                     contentPanel.getRentButton().setText("Zbyt niskie saldo");
-                    contentPanel.getRentButton().setEnabled(false);           }
+                    contentPanel.getRentButton().setEnabled(false);
+                }
             }
             resultsPanel.add(contentPanel);
         }
@@ -1474,7 +1480,7 @@ public class MainScreen extends ScreenUtil {
                 Vehicle.class, v1.getVehicleId(), v1
         );
         Vehicle v2 = new Bike(SingleTrackVehicle.MTB, Brand2, Brand2.getModels().get("Talon 1"), false, false);
-        Vehicle v3 = new Scooter(SingleTrackVehicle.MTB,Brand1,Brand1.getModels().get("Rockhopper Elite"),67);
+        Vehicle v3 = new Scooter(SingleTrackVehicle.MTB, Brand1, Brand1.getModels().get("Rockhopper Elite"), 67);
 
         cd.addObject(
                 Vehicle.class, v3.getVehicleId(), v3

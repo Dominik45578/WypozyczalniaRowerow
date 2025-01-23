@@ -5,13 +5,13 @@ import dataclass.rental.RentalServices;
 import dataclass.rental.RentalTransaction;
 import dataclass.vehicle.Vehicle;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class Customer implements User, Serializable {
-
     protected String customerId;
     protected String pesel;
     protected String address;
@@ -58,6 +58,9 @@ public abstract class Customer implements User, Serializable {
 
     public void addToSaldo(float saldo) {
         this.saldo += saldo;
+    }
+    public void setSaldo(String saldo){
+        this.saldo += Integer.parseInt(saldo);
     }
 
     public void addToSaldoString(String saldo) {
@@ -189,10 +192,11 @@ public abstract class Customer implements User, Serializable {
 
     @Override
     public boolean rentItem(String itemId, Vehicle vehicle) {
-        if (rentedItems.containsKey(itemId)) {
+        if(2*vehicle.getPrice()>saldo){
             return false;
         }
         rentedItems.put(itemId, vehicle);
+        saldo-=vehicle.getPrice();
         return true;
     }
 

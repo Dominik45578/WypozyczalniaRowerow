@@ -19,9 +19,7 @@ public class EBike extends SingleTrackVehicle implements Vehicle, Serializable {
     }
 
 
-    public void setBatteryLevel(int batteryLevel) {
-        this.batteryLevel = batteryLevel;
-    }
+
 
     public boolean needsCharging() {
         return batteryLevel < 15;
@@ -33,5 +31,9 @@ public class EBike extends SingleTrackVehicle implements Vehicle, Serializable {
     @Override
     public int getBatteryLevel() {
         return batteryLevel;
+    }
+    @Override
+    public void setBatteryLevel(int level){
+        batteryLevel = level%100;
     }
 }

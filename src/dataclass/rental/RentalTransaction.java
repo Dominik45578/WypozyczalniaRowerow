@@ -27,7 +27,9 @@ public class RentalTransaction implements Serializable{
     }
 
     public void endRental() {
-        this.rentalEnd = LocalDateTime.now();
+        if(isActive()) {
+            this.rentalEnd = LocalDateTime.now();
+        }
     }
 
     public Vehicle getVehicle() {

@@ -37,7 +37,7 @@ public interface Vehicle extends Serializable {
     default int getBatteryLevel() {
         return -1;
     }
-
+    default void setBatteryLevel(int level){return;}
     String getVehicleBrandToString();
     VehicleBrand getVehicleBrand();
     String getType();

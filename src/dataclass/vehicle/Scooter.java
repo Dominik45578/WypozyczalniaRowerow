@@ -11,7 +11,7 @@ import java.io.Serializable;
  */
 public class Scooter extends SingleTrackVehicle implements Vehicle, Serializable {
 
-    private int batteryLevel;
+    protected int batteryLevel;
 
     public Scooter(String type,VehicleBrand brand ,VehicleModel model, int batteryLevel) {
         super(type,brand, model);
@@ -20,9 +20,6 @@ public class Scooter extends SingleTrackVehicle implements Vehicle, Serializable
     }
 
 
-    public void setBatteryLevel(int batteryLevel) {
-        this.batteryLevel = batteryLevel;
-    }
 
     public boolean needsCharging() {
         return batteryLevel < 20;
@@ -38,4 +35,10 @@ public class Scooter extends SingleTrackVehicle implements Vehicle, Serializable
     public int getBatteryLevel() {
         return batteryLevel;
     }
+
+    @Override
+    public void setBatteryLevel(int level){
+        batteryLevel = level%100;
+    }
 }
+
