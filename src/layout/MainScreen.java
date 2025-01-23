@@ -2,10 +2,12 @@ package layout;
 
 import dataclass.fileoperations.CentralDatabase;
 import dataclass.fileoperations.CheckData;
+import dataclass.rental.ChartGenerator;
 import dataclass.rental.RentalServices;
 import dataclass.rental.RentalTransaction;
 import dataclass.user.*;
 import dataclass.vehicle.*;
+import org.jfree.chart.ChartPanel;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
@@ -1343,6 +1345,43 @@ public class MainScreen extends ScreenUtil {
 
     public void createStatsPanel() {
         JPanel statsPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        statsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        statsPanel.setLayout(new BorderLayout(10, 10));
+
+        // CardLayout dla wykresów
+        JPanel chartPanel = new JPanel(new CardLayout());
+        ChartPanel vehicleChartPanel = new ChartPanel(ChartGenerator.createVehicleChart());
+        ChartPanel transactionChartPanel = new ChartPanel(ChartGenerator.createTransactionChart());
+        chartPanel.add(vehicleChartPanel, "VehicleChart");
+        chartPanel.add(transactionChartPanel, "TransactionChart");
+
+        JPanel buttonPanel = createRoundedPanel(Colors.BACKGROUND.getColor());
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
+
+        JButton previousButton = createRoundedButton("<- Poprzedni", 20);
+        JButton nextButton = createRoundedButton("Następny ->", 20);
+
+        CardLayout cl = (CardLayout) chartPanel.getLayout();
+        previousButton.setEnabled(false); // Na początku pokazujemy tylko wykres kołowy
+
+        previousButton.addActionListener(e -> {
+            cl.show(chartPanel, "VehicleChart");
+            previousButton.setEnabled(false);
+            nextButton.setEnabled(true);
+        });
+
+        nextButton.addActionListener(e -> {
+            cl.show(chartPanel, "TransactionChart");
+            nextButton.setEnabled(false);
+            previousButton.setEnabled(true);
+        });
+
+        buttonPanel.add(previousButton);
+        buttonPanel.add(nextButton);
+
+        statsPanel.add(chartPanel, BorderLayout.CENTER);
+        statsPanel.add(buttonPanel, BorderLayout.SOUTH);
+
         changeLastElement(MenuOptionPosition.STATS.getIndex());
         statsPanel.setPreferredSize(layers.getPreferredSize());
         updateLayerContent(statsPanel);
