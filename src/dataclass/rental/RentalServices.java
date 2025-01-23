@@ -10,6 +10,7 @@ import dataclass.vehicle.Vehicle;
 import dataclass.vehicle.VehicleBrand;
 import dataclass.vehicle.VehicleModel;
 
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -85,17 +86,19 @@ public class RentalServices implements RentalService {
         Vehicle vehicle = database.getObject(Vehicle.class, vehicleId);
         if (vehicle != null && !vehicle.isRented()) {
             System.out.println("Wynajem :" + vehicleId);
-            RentalTransaction t = new RentalTransaction(database.getNextID(RentalTransaction.class, "T"), vehicle, user);
-            user.rentItem(vehicle.getVehicleId(), vehicle);
-            user.getRentedHistory().put(t.getTransactionID(), t);
-            vehicle.rentVehicle(user);
-            addTransaction(t);
+            if (user.rentItem(vehicle.getVehicleId(), vehicle)) {
+                RentalTransaction t = new RentalTransaction(database.getNextID(RentalTransaction.class, "T"), vehicle, user);
+                user.getRentedHistory().put(t.getTransactionID(), t);
+                vehicle.rentVehicle(user);
+                addTransaction(t);
+                database.addObject(RentalTransaction.class, t.getTransactionID(), t);
+            }
             database.addObject(Vehicle.class, vehicleId, vehicle);
             database.addObject(User.class, user.getID(), user);
-            database.addObject(RentalTransaction.class, t.getTransactionID(), t);
-            if(user instanceof Employee){
+
+            if (user instanceof Employee) {
                 Employee e = (Employee) user;
-                e.getEmployer().addEmployee(e.getID(),e);
+                e.getEmployer().addEmployee(e.getID(), e);
                 database.addObject(User.class, e.getEmployer().getID(), e.getEmployer());
             }
 
@@ -107,19 +110,30 @@ public class RentalServices implements RentalService {
     @Override
     public boolean returnVehicle(String vehicleId) {
         Vehicle vehicle = database.getObject(Vehicle.class, vehicleId);
-        if (vehicle != null && vehicle.isRented()) {
+        if (vehicle != null) {
             System.out.println("Zwrot :" + vehicleId);
-            User user = vehicle.getRenter();
+            Customer user = (Customer) vehicle.getRenter();
             RentalTransaction t = findActiveTransactionByVehicleId(vehicleId);
             if (user.returnItem(t.getTransactionID())) {
+                System.out.println("Znaleziono pojazd w obiekcie usera");
+                 t.endRental();
+                int rentalDays = (int) ChronoUnit.DAYS.between(t.getRentalStart(), t.getRentalEnd());
+                user.addToSaldo(-1 * (rentalDays - 1) * vehicle.getPrice());
                 vehicle.returnVehicle();
-                t.endRental();
-                System.out.println("Zwrócono pomyslnie");
+                if(vehicle.getRenter()==null){
+                    System.out.println("Ustawiono usera na null w pojedzie");
+
+                }
+
+                if (vehicle.isElectric()) {
+                    vehicle.setBatteryLevel(vehicle.getBatteryLevel() - rentalDays * 20);
+                }
+                database.addObject(RentalTransaction.class, t.getTransactionID(), t);
             }
 
             database.addObject(Vehicle.class, vehicleId, vehicle);
             database.addObject(User.class, user.getID(), user);
-            database.addObject(RentalTransaction.class, t.getTransactionID(), t);
+
             return true;
         }
         return false;
